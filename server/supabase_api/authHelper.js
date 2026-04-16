@@ -1,4 +1,4 @@
-import supabase from "../config/db.js";
+import {supabase} from "../config/db.js";
 
 export const getUserFromToken = async (token) => {
   const { data, error } = await supabase.auth.getUser(token);

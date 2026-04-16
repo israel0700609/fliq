@@ -1,3 +1,5 @@
+import {supabase} from "../config/db.js";
+
 export const insertSwipe = async (
   token,
   tmdbId,

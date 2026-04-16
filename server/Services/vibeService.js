@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-// The latest and most active model for new API keys
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const TMDB_GENRES = `
@@ -55,7 +54,6 @@ export const getGenresFromVibe = async (userVibe) => {
         let mappedGenres = data.candidates[0].content.parts[0].text;
         mappedGenres = mappedGenres.replace(/\s+/g, '').trim();
 
-        // Print in English
         console.log(`✅ Vibe processed: "${userVibe}" -> Genres: ${mappedGenres}`);
         return mappedGenres;
 

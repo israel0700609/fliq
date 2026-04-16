@@ -1,12 +1,34 @@
 import { StyleSheet } from 'react-native';
+import Colors from './Colors'; // וודא שהנתיב נכון (הם באותה תיקייה)
 
-export const getColors = (isDark) => ({
-  background: isDark ? '#121212' : '#ffffff',
-  text: isDark ? '#e5e7eb' : '#1f2937',
-  primary: isDark ? '#818cf8' : '#5858b9',
-  inputBg: isDark ? '#1e1e1e' : '#ffffff',
-  border: isDark ? '#374151' : '#000000',
-});
+export const getColors = (isDark) => {
+  if (isDark) {
+    return {
+      background: Colors.background,
+      text: Colors.text,
+      primary: Colors.primary,
+      inputBg: Colors.surface,
+      border: Colors.border,
+      accent: Colors.accent,
+      success: Colors.success,
+      error: Colors.error,
+      textMuted: Colors.textMuted,
+    };
+  }
+
+  // A default light theme as a fallback
+  return {
+    background: '#F5F5F7',
+    text: '#1A1A1A',
+    primary: '#6366f1',
+    inputBg: '#FFFFFF',
+    border: '#D1D1D6',
+    accent: '#f43f5e',
+    success: '#10b981',
+    error: '#ef4444',
+    textMuted: '#6b7280',
+  };
+};
 
 export const getLayoutStyle = (isLandscape, bg) =>
   StyleSheet.create({
@@ -18,4 +40,4 @@ export const getLayoutStyle = (isLandscape, bg) =>
       justifyContent: 'center',
       padding: 16,
     },
-}).container;
+  }).container;
