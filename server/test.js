@@ -1,4 +1,3 @@
-// Load the .env file before anything else!
 import 'dotenv/config'; 
 
 import { discoverMovies } from "./Services/tmdbService.js";

@@ -12,7 +12,7 @@ if (!supabaseUrl || !supabaseKey) {
 }
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const connectDB = async () => {
+const connectDB = async () => {
     try {
         const { data, error } = await supabase.from('users').select('*').limit(1);
         
@@ -27,4 +27,4 @@ export const connectDB = async () => {
     }
 }
 
-export default supabase;
+export {supabase,connectDB};
