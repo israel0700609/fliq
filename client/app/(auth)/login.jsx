@@ -18,6 +18,7 @@ import { useApp } from '../../hooks/AppContext';
 import { getColors } from '../../constants/theme';
 import { validate, checkValidationLogin } from '../../lib/utils';
 import { useAuth } from '../../hooks/useAuth.js';
+import { navigate } from 'expo-router/build/global-state/routing.js';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -119,6 +120,7 @@ export default function LoginScreen() {
                 try {
                   const result = await login(values.email, values.password);
                   if (!result.success) alert(result.message);
+                  router.push('../(tabs)/JoinRoom')
                 } catch {
                   alert('Something went wrong. Please check your connection.');
                 } finally {

@@ -17,23 +17,13 @@ export const calculateAge = (dob) => {
 
 export const validate = (name, value) => {
   if (!value) return '';
-
   switch (name) {
-    case 'firstname':
-      return value.length < 2 ? 'First name must be at least 2 characters' : '';
-
-    case 'lastname':
-      return !REGEX.LAST_NAME.test(value) ? 'Only English letters and numbers' : '';
-
     case 'email':
-      return !REGEX.EMAIL.test(value) ? 'Invalid email format' : '';
-
+      return REGEX.EMAIL.test(value) ? '' : 'כתובת אימייל לא תקינה';
     case 'phone':
-      return !REGEX.PHONE.test(value) ? 'Phone must be exactly 10 digits' : '';
-
-    case 'password':
-      return value.length < 8 ? 'Password must be at least 8 characters' : '';
-
+      return REGEX.PHONE.test(value) ? '' : 'מספר טלפון לא תקין';
+    case 'lastName':
+        return REGEX.LAST_NAME.test(value) ? '' : 'שם משפחה לא תקין';
     default:
       return '';
   }
@@ -58,3 +48,4 @@ export const checkValidationLogin = (values, errors) => {
   
   return hasValues && hasNoErrors && REGEX.EMAIL.test(values.email);
 };
+

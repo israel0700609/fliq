@@ -5,7 +5,6 @@ import { ActivityIndicator, View } from 'react-native';
 export default function Index() {
   const { user, isLoading } = useAuth();
 
-  // בזמן שהאפליקציה בודקת אם יש משתמש שמור ב-Storage
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -14,6 +13,5 @@ export default function Index() {
     );
   }
 
-  // אם אין משתמש, הפנה ללוגין. אם יש, הפנה לטאבים
   return user ? <Redirect href="/(tabs)/VibeInputScreen" /> : <Redirect href="/(auth)/login" />;
 }
