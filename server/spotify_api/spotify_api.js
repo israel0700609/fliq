@@ -1,7 +1,30 @@
 import axios from 'axios';
 
+const cleanEnv = (value = '') =>
+  String(value).trim().replace(/^['"]|['"]$/g, '').replace(/;$/, '');
+
+
 let cachedToken = null;
 let tokenExpirationTime = 0;
+
+export const roomTokens = {};
+
+export const saveTokenForRoom = (roomId, tokenData) => {
+    roomTokens[roomId] = {
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_at: Date.now() + (tokenData.expires_in * 1000) 
+    };
+};
+
+export const getSavedTokenForRoom = (roomId) => {
+    const tokenInfo = roomTokens[roomId];
+    if (!tokenInfo) return null;
+    
+    return tokenInfo.access_token;
+};
+
+
 
 export const getAccessToken = async () => {
   const now = Date.now();
@@ -35,7 +58,7 @@ export const getAccessToken = async () => {
 
 export const searchTracks = async (query) => {
   try {
-    const token = await getAccessToken(); // was using undefined `access_token`
+    const token = await getAccessToken(); 
     const response = await axios.get('https://api.spotify.com/v1/search', {
       headers: { 'Authorization': `Bearer ${token}` },
       params: { q: query, type: 'track', limit: 10 },
@@ -98,17 +121,19 @@ export const getRecommendations = async (trackId) => {
 };
 
 
-
-export const getHostToken = async (code) => {
-  const authHeader = Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64');
+export const getHostToken = async (code, redirectUriOverride = '') => {
+  const clientId = cleanEnv(process.env.SPOTIFY_CLIENT_ID);
+  const clientSecret = cleanEnv(process.env.SPOTIFY_CLIENT_SECRET);
+  const redirectUri = cleanEnv(redirectUriOverride || process.env.SPOTIFY_REDIRECT_URI);
+  const authHeader = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   try {
     const response = await axios.post(
-      'https://accounts.spotify.com/api/token',
-      new URLSearchParams({
+        'https://accounts.spotify.com/api/token',      
+        new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: process.env.SPOTIFY_REDIRECT_URI,
+        redirect_uri: redirectUri,
       }).toString(),
       {
         headers: {
@@ -117,15 +142,20 @@ export const getHostToken = async (code) => {
         },
       }
     );
-
+    console.log('success');
     return response.data; 
   } catch (error) {
     console.error('Error getting Host Token:', error.response?.data || error.message);
     throw error;
   }
-};export const addToQueue = async (trackUri) => {
+};
+
+
+export const addToQueue = async (trackUri, roomId) => {
   try {
-    const token = await getHostToken(); 
+    const token = getSavedTokenForRoom(roomId);
+    if (!token) throw new Error('No valid token found for this room. Host needs to re-authenticate.');
+
     await axios.post(
       'https://api.spotify.com/v1/me/player/queue',
       null, 
@@ -141,9 +171,11 @@ export const getHostToken = async (code) => {
   }
 };
 
-export const skipToNext = async () => {
+export const skipToNext = async (roomId) => {
   try {
-    const token = await getHostToken();
+    const token = getSavedTokenForRoom(roomId);
+    if (!token) throw new Error('No valid token found for this room.');
+
     await axios.post('https://api.spotify.com/v1/me/player/next', null, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -154,9 +186,11 @@ export const skipToNext = async () => {
   }
 };
 
-export const getPlaybackState = async () => {
+export const getPlaybackState = async (roomId) => {
   try {
-    const token = await getHostToken();
+    const token = getSavedTokenForRoom(roomId);
+    if (!token) throw new Error('No valid token found for this room.');
+
     const response = await axios.get('https://api.spotify.com/v1/me/player', {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -167,10 +201,12 @@ export const getPlaybackState = async () => {
   }
 };
 
-export const togglePlayback = async (shouldPlay = true) => {
+export const togglePlayback = async (shouldPlay = true, roomId) => {
   const endpoint = shouldPlay ? 'play' : 'pause';
   try {
-    const token = await getHostToken();
+    const token = getSavedTokenForRoom(roomId);
+    if (!token) throw new Error('No valid token found for this room.');
+
     await axios.put(`https://api.spotify.com/v1/me/player/${endpoint}`, null, {
       headers: { 'Authorization': `Bearer ${token}` },
     });

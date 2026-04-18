@@ -56,7 +56,8 @@
           "microphonePermission": "Allow fliq to access the microphone",
           "speechRecognitionPermission": "Allow fliq to use speech recognition"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

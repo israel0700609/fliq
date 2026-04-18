@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, Pressable, StyleSheet,
   SafeAreaView, Modal, TextInput, FlatList, Image,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Linking
+  KeyboardAvoidingView, Platform, ActivityIndicator, Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import io from 'socket.io-client';
 import Colors from '../../constants/Colors';
 
@@ -17,30 +18,45 @@ const socket = io(SERVER_URL, {
   autoConnect: true,
 });
 
-// ── Spotify connect sheet ────────────────────────────────────────────────────
 function SpotifyConnectSheet({ visible, onClose, onConnected, roomId }) {
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      // Open Spotify OAuth via your server — server should redirect back with the code
-      const authUrl = `${SERVER_URL}api/auth/spotify?roomId=${roomId}`;
-      const result = await WebBrowser.openAuthSessionAsync(authUrl);
+      if (!SERVER_URL) {
+        console.error('Missing EXPO_PUBLIC_SERVER_URL');
+        Alert.alert('Spotify', 'Missing EXPO_PUBLIC_SERVER_URL in client/.env');
+        return;
+      }
+      const baseUrl = SERVER_URL.replace(/\/$/, '');
+      const redirectUrl = Linking.createURL('spotify-callback');
+      const authUrl = `${baseUrl}/api/auth/spotify?roomId=${encodeURIComponent(roomId)}&mobileRedirect=${encodeURIComponent(redirectUrl)}`;
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
+
+      console.log('[Spotify] auth session result:', result?.type, result?.url);
 
       if (result.type === 'success' && result.url) {
-        // Parse the code from the redirect URL your server sends back
-        const url = new URL(result.url);
-        const code = url.searchParams.get('code');
+      const parsed = Linking.parse(result.url);
+      const success = parsed.queryParams?.success;
 
-        if (code) {
-          socket.emit('spotify_auth_code', { code, roomId });
-          onConnected();
-          onClose();
-        }
+      if (success === 'true') {
+        // שלח אירוע סוקט פשוט כדי לעדכן את כולם בחדר
+        socket.emit('spotify_connected_alert', { roomId }); 
+        onConnected();
+        onClose();
+        Alert.alert('Spotify', 'Connected successfully');
+        return;
       }
+
+        Alert.alert('Spotify', 'Auth returned without code. Please try again.');
+        return;
+      }
+
+      Alert.alert('Spotify', `Auth did not complete (${result.type}).`);
     } catch (err) {
       console.error('Spotify auth error:', err);
+      Alert.alert('Spotify', 'Connection failed. Check server URL and try again.');
     } finally {
       setIsConnecting(false);
     }

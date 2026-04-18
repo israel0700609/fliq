@@ -1,8 +1,12 @@
 import { Router } from "express";
 import jwt from 'jsonwebtoken';
-import { isUserExists, registerNewUser, login,deleteUser,updateUser, getUserById } from "../supabase_api/authdb.js";
+import { isUserExists, registerNewUser, login, deleteUser, updateUser, getUserById } from "../supabase_api/authdb.js";
+import { getHostToken, saveTokenForRoom } from "../spotify_api/spotify_api.js";
 
 const router = Router();
+
+const cleanEnv = (value = '') =>
+    String(value).trim().replace(/^['"]|['"]$/g, '').replace(/;$/, '');
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -23,15 +27,7 @@ router.post('/register', async (req, res) => {
             return res.status(409).json({ message: 'User already exists' });
         }
 
-        const newUser = await registerNewUser(
-            email, 
-            password, 
-            firstname, 
-            lastname,  
-            phone, 
-            birthday
-        );
-        
+        const newUser = await registerNewUser(email, password, firstname, lastname, phone, birthday);
         const user = newUser.user;
 
         res.status(201).json({
@@ -44,6 +40,7 @@ router.post('/register', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -84,7 +81,6 @@ router.get('/user/:id', async (req, res) => {
     }
 });
 
-
 router.patch('/user/:id', async (req, res) => {
     try {
         const updates = req.body;
@@ -114,18 +110,76 @@ router.delete('/user/:id', async (req, res) => {
     }
 });
 
-
 router.get('/spotify', (req, res) => {
-  const { roomId } = req.query;
-  const scope = 'user-modify-playback-state user-read-playback-state';
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: process.env.SPOTIFY_CLIENT_ID,
-    scope,
-    redirect_uri: process.env.SPOTIFY_REDIRECT_URI,
-    state: roomId, 
-  });
-  res.redirect(`https://accounts.spotify.com/authorize?${params}`);
+    const { roomId } = req.query;
+    const mobileRedirect = cleanEnv(req.query.mobileRedirect || '');
+    const redirectUriParam = cleanEnv(req.query.redirectUri || '');
+    const scope = 'user-modify-playback-state user-read-playback-state';
+    const clientId = cleanEnv(process.env.SPOTIFY_CLIENT_ID);
+    const redirectUri = cleanEnv(redirectUriParam || process.env.SPOTIFY_REDIRECT_URI);
+
+    if (!clientId || !redirectUri) {
+        return res.status(500).json({ message: 'Missing Spotify client configuration on server' });
+    }
+
+    const oauthState = JSON.stringify({
+        roomId: String(roomId || ''),
+        mobileRedirect,
+        redirectUri,
+    });
+
+    console.log('[Spotify OAuth] start', {
+        roomId: String(roomId || ''),
+        redirectUri,
+        mobileRedirect,
+    });
+
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        scope,
+        redirect_uri: redirectUri,
+        state: oauthState,
+    });
+    res.redirect(`https://accounts.spotify.com/authorize?${params.toString()}`);
+});
+
+router.get('/spotify/callback', async (req, res) => {
+    const { code, state } = req.query;
+
+    console.log('[Spotify OAuth] callback received', {
+        hasCode: Boolean(code),
+        stateLength: String(state || '').length,
+    });
+
+    try {
+        let roomId = '';
+        let mobileRedirect = '';
+        let redirectUri = cleanEnv(process.env.SPOTIFY_REDIRECT_URI);
+        try {
+            const parsedState = JSON.parse(String(state || '{}'));
+            roomId = String(parsedState.roomId || '');
+            mobileRedirect = cleanEnv(parsedState.mobileRedirect || '');
+            redirectUri = cleanEnv(parsedState.redirectUri || redirectUri);
+        } catch {
+            roomId = String(state || '');
+        }
+
+        const tokenData = await getHostToken(code, redirectUri);
+        
+        if (roomId) {
+            saveTokenForRoom(roomId, tokenData);
+        }
+        
+        const appRedirectBase = mobileRedirect || 'fliq://spotify-callback';
+        const separator = appRedirectBase.includes('?') ? '&' : '?';
+const appRedirect = `${appRedirectBase}${separator}code=${code}&success=true&roomId=${encodeURIComponent(roomId)}`;        
+        console.log('[Spotify OAuth] redirecting to app', { appRedirectBase, roomId });
+        res.redirect(appRedirect);
+    } catch (err) {
+        console.error('Spotify callback error:', err);
+        res.status(500).send('Spotify auth failed');
+    }
 });
 
 export default router;

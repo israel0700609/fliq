@@ -1,4 +1,4 @@
-import { searchTracks } from "../spotify_api/spotify_api.js";
+import { getHostToken, searchTracks } from "../spotify_api/spotify_api.js";
 import { generateCode } from "../utils/utils.js";
 const roomTokens = {}; // roomId -> host access token
 
@@ -44,4 +44,7 @@ socket.on('spotify_auth_code', async ({ code, roomId }) => {
   } catch (err) {
     socket.emit('error_msg', 'Failed to connect Spotify');
   }
+  socket.on('spotify_connected_alert', ({ roomId }) => {
+  io.to(roomId).emit('spotify_connected');
+});
 });};
