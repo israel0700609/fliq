@@ -1,6 +1,8 @@
+import { searchTracks } from "../spotify_api/spotify_api.js";
 import { generateCode } from "../utils/utils.js";
+const roomTokens = {}; // roomId -> host access token
 
-export default function handleSocket(socket) {
+export default function handleSocket(socket,io) {
     console.log(`New user connected: (Socket Id: ${socket.id})`);
     
     socket.on('create_room', () => {
@@ -21,8 +23,25 @@ export default function handleSocket(socket) {
         socket.leave(roomId);
         console.log(`User left room number: ${roomId}`);
     });
-    
-    socket.on('disconnect', () => {
-        console.log(`User disconnected (Socket Id: ${socket.id})`);
+    socket.on('search_track', async (query) => {
+        try {
+            console.log(`[Spotify] Searching for: ${query}`);
+            const res = await searchTracks(query);
+            
+            socket.emit('searched_track', res);
+        } catch (error) {
+            console.error('Socket Search Error:', error.message);
+            socket.emit('error_msg', 'Failed to search tracks. Please try again.');
+        }
     });
-};
+
+socket.on('spotify_auth_code', async ({ code, roomId }) => {
+  try {
+    const tokenData = await getHostToken(code);
+    roomTokens[roomId] = tokenData.access_token;
+    socket.emit('spotify_connected');
+    io.to(roomId).emit('spotify_connected');
+  } catch (err) {
+    socket.emit('error_msg', 'Failed to connect Spotify');
+  }
+});};

@@ -119,8 +119,11 @@ export default function LoginScreen() {
                 setIsPending(true);
                 try {
                   const result = await login(values.email, values.password);
-                  if (!result.success) alert(result.message);
-                  router.push('../(tabs)/JoinRoom')
+                  if (!result.success) {
+                    alert(result.message);
+                    return;
+                  }
+                  router.replace('/(tabs)/JoinRoom');
                 } catch {
                   alert('Something went wrong. Please check your connection.');
                 } finally {

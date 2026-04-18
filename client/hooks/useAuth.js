@@ -3,6 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AuthContext = createContext();
+const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 
 const useAuth = () => useContext(AuthContext);
 
@@ -35,7 +36,13 @@ const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post("http://192.168.1.43:5000/api/auth/login", { email, password });
+      if (!SERVER_URL) {
+        return {
+          success: false,
+          message: 'Missing EXPO_PUBLIC_SERVER_URL in client/.env',
+        };
+      }
+      const res = await axios.post(`${SERVER_URL}/api/auth/login`, { email, password });
 
       const userData = {
         id: res.data.id,
@@ -55,16 +62,25 @@ const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
+      const isNetworkError = !error.response;
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+        message: isNetworkError
+          ? 'Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status.'
+          : error.response?.data?.message || 'Login failed'
       };
     }
   };
 
   const register = async (firstname, lastname, email, password, phone, birthday) => {
     try {
-      const res = await axios.post("http://192.168.1.43:5000/api/auth/register", {
+      if (!SERVER_URL) {
+        return {
+          success: false,
+          message: 'Missing EXPO_PUBLIC_SERVER_URL in client/.env',
+        };
+      }
+      const res = await axios.post(`${SERVER_URL}/api/auth/register`, {
         firstname, lastname, email, password, phone, birthday
       });
 
@@ -86,9 +102,12 @@ const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
+      const isNetworkError = !error.response;
       return {
         success: false,
-        message: error.response?.data?.message || 'Register failed' 
+        message: isNetworkError
+          ? 'Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status.'
+          : error.response?.data?.message || 'Register failed'
       };
     }
   };

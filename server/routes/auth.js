@@ -114,4 +114,18 @@ router.delete('/user/:id', async (req, res) => {
     }
 });
 
+
+router.get('/spotify', (req, res) => {
+  const { roomId } = req.query;
+  const scope = 'user-modify-playback-state user-read-playback-state';
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: process.env.SPOTIFY_CLIENT_ID,
+    scope,
+    redirect_uri: process.env.SPOTIFY_REDIRECT_URI,
+    state: roomId, 
+  });
+  res.redirect(`https://accounts.spotify.com/authorize?${params}`);
+});
+
 export default router;
