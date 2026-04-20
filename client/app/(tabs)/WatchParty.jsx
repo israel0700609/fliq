@@ -119,7 +119,7 @@ function SpotifyConnectSheet({ visible, onClose, onConnected, roomId }) {
 }
 
 // ── Search sheet ─────────────────────────────────────────────────────────────
-function SearchSheet({ visible, onClose }) {
+function SearchSheet({ visible, onClose, roomId }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -146,7 +146,7 @@ function SearchSheet({ visible, onClose }) {
 
   const handleAdd = (track) => {
     setAddedIds((prev) => [...prev, track.id]);
-    socket.emit('add_to_queue', track);
+    socket.emit('add_to_queue', { track, roomId });
   };
 
   const handleClose = () => {
@@ -414,7 +414,7 @@ export default function WatchParty() {
 
       </View>
 
-      <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} />
+      <SearchSheet visible={searchVisible} onClose={() => setSearchVisible(false)} roomId={roomId} />
 
       {isHost && (
         <SpotifyConnectSheet
