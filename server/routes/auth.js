@@ -10,7 +10,7 @@ const cleanEnv = (value = '') =>
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '7d'
+        expiresIn: '2m'
     });
 };
 
@@ -33,6 +33,8 @@ router.post('/register', async (req, res) => {
         res.status(201).json({
             id: user.id,
             email: user.email,
+            firstname: firstname,
+            lastname: lastname,
             token: generateToken(user.id)
         });
     } catch (error) {

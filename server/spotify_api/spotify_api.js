@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import { rooms } from '../RoomState.js';
 const cleanEnv = (value = '') =>
   String(value).trim().replace(/^['"]|['"]$/g, '').replace(/;$/, '');
 
@@ -9,21 +9,46 @@ let tokenExpirationTime = 0;
 
 export const roomTokens = {};
 
+/*
+rooms.set(roomId, {
+    hostSocketId: 'socket_id_of_host',
+    spotifyToken: '...', // ה-Access Token של המארח (אופציונלי לשמור כאן)
+    members: new Map([
+        ['socket_id_1', { username: 'User1' }],
+        ['socket_id_2', { username: 'User2' }]
+    ])
+});
+*/
 export const saveTokenForRoom = (roomId, tokenData) => {
-    roomTokens[roomId] = {
+    if (!rooms.has(roomId)) {
+        console.log('Error: Room does not exist');
+        return;
+    }
+
+    const roomToken = {
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token,
         expires_at: Date.now() + (tokenData.expires_in * 1000) 
     };
+
+    const room = rooms.get(roomId);
+    
+    room.spotifyToken = roomToken; 
+
+    console.log(`Spotify token saved for room: ${roomId}`);
 };
 
 export const getSavedTokenForRoom = (roomId) => {
-    const tokenInfo = roomTokens[roomId];
-    if (!tokenInfo) return null;
-    
-    return tokenInfo.access_token;
-};
+  const room = rooms.get(roomId);
 
+  if (!room) {
+    console.log('Error: Room does not exist');
+    return null;
+  }
+  console.log(`Spotify token saved for room: ${roomId}`);
+
+  return room.spotifyToken?.access_token || null;
+};
 
 
 export const getAccessToken = async () => {
@@ -121,7 +146,11 @@ export const getRecommendations = async (trackId) => {
 };
 
 
-export const getHostToken = async (code, redirectUriOverride = '') => {
+export const getHostToken = async (roomId, code, redirectUriOverride = '') => {
+  const room = rooms.get(roomId);
+  if (!room) throw new Error('Room does not exist');
+  if (room.spotifyToken) return room.spotifyToken;
+
   const clientId = cleanEnv(process.env.SPOTIFY_CLIENT_ID);
   const clientSecret = cleanEnv(process.env.SPOTIFY_CLIENT_SECRET);
   const redirectUri = cleanEnv(redirectUriOverride || process.env.SPOTIFY_REDIRECT_URI);
@@ -129,8 +158,8 @@ export const getHostToken = async (code, redirectUriOverride = '') => {
 
   try {
     const response = await axios.post(
-        'https://accounts.spotify.com/api/token',      
-        new URLSearchParams({
+      'https://accounts.spotify.com/api/token',     
+      new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
         redirect_uri: redirectUri,
@@ -142,14 +171,16 @@ export const getHostToken = async (code, redirectUriOverride = '') => {
         },
       }
     );
-    console.log('success');
+    
+    console.log('Host token fetched successfully');
+    saveTokenForRoom(roomId, response.data); 
+    
     return response.data; 
   } catch (error) {
     console.error('Error getting Host Token:', error.response?.data || error.message);
     throw error;
   }
 };
-
 
 export const addToQueue = async (trackUri, roomId) => {
   try {

@@ -41,7 +41,6 @@ function SpotifyConnectSheet({ visible, onClose, onConnected, roomId }) {
       const success = parsed.queryParams?.success;
 
       if (success === 'true') {
-        // שלח אירוע סוקט פשוט כדי לעדכן את כולם בחדר
         socket.emit('spotify_connected_alert', { roomId }); 
         onConnected();
         onClose();
