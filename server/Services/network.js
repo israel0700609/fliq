@@ -6,7 +6,7 @@ const roomQueues = {}; // roomId -> queued track list
 /*
 rooms.set(roomId, {
     hostSocketId: 'socket_id_of_host',
-    spotifyToken: '...', // ה-Access Token של המארח (אופציונלי לשמור כאן)
+    spotifyToken: '...',
     members: new Map([
         ['socket_id_1', { username: 'User1' }],
         ['socket_id_2', { username: 'User2' }]
@@ -16,13 +16,21 @@ rooms.set(roomId, {
 
 export default function handleSocket(socket,io) {
     console.log(`New user connected: (Socket Id: ${socket.id})`);
+    const normalizeRoomCode = (value = '') => String(value).trim().toUpperCase();
+    const findRoomId = (roomCode = '') => {
+        const normalizedCode = normalizeRoomCode(roomCode);
+        if (!normalizedCode) return null;
+        if (rooms.has(normalizedCode)) return normalizedCode;
+        const match = [...rooms.keys()].find((id) => normalizeRoomCode(id) === normalizedCode);
+        return match || null;
+    };
 
     const emitMemberCount = (roomId) => {
         const count = rooms.has(roomId) ? rooms.get(roomId).members.size : 0;
         io.to(roomId).emit('member_count', count);
     };
     socket.on('create_room', (username) => {
-        const roomId = generateCode();
+        const roomId = normalizeRoomCode(generateCode());
         console.log(`Room created with (roomId: ${roomId}) on (SocketId:${socket.id})`);
         
         rooms.set(roomId, {
@@ -36,16 +44,19 @@ export default function handleSocket(socket,io) {
         emitMemberCount(roomId);
     });
     socket.on('join_room', (roomId, user) => {
-        if (rooms.has(roomId)) {
-            const username = `${user.firstname} ${user.lastname}`;
-            socket.join(roomId);
-            console.log(`New user ${username} joined room number: ${roomId}`);
-            const room = rooms.get(roomId);
+        const resolvedRoomId = findRoomId(roomId);
+        if (resolvedRoomId) {
+            const username = typeof user === 'string'
+                ? user
+                : `${user?.firstname ?? ''} ${user?.lastname ?? ''}`.trim() || 'Guest';
+            socket.join(resolvedRoomId);
+            console.log(`New user ${username} joined room number: ${resolvedRoomId}`);
+            const room = rooms.get(resolvedRoomId);
             room.members.set(socket.id, { username: username });
-            io.to(roomId).emit('room_joined', roomId); // Emit to all in room
-            socket.to(roomId).emit('user_joined', username); // Notify others
-            socket.emit('queue_updated', roomQueues[roomId] || []);
-            emitMemberCount(roomId);
+            socket.emit('room_joined', resolvedRoomId);
+            socket.to(resolvedRoomId).emit('user_joined', username); 
+            socket.emit('queue_updated', roomQueues[resolvedRoomId] || []);
+            emitMemberCount(resolvedRoomId);
         } else {
             socket.emit('error_msg', "Room dont exist.");
         }

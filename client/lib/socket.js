@@ -2,11 +2,21 @@
 import { Alert } from 'react-native';
 import io from 'socket.io-client';
 
+let socketInstance = null;
+let socketUrl = null;
+
 export function getSocket(SERVER_URL) {
-  return io(SERVER_URL, {
-    transports: ['websocket'],
-    autoConnect: true,
-  });
+  if (!SERVER_URL) {
+    Alert.alert('Connection error', 'Missing EXPO_PUBLIC_SERVER_URL in client/.env');
+  }
+  if (!socketInstance || socketUrl !== SERVER_URL) {
+    socketInstance = io(SERVER_URL, {
+      transports: ['websocket'],
+      autoConnect: true,
+    });
+    socketUrl = SERVER_URL;
+  }
+  return socketInstance;
 }
 
 export function handleSocket(socket, router) {
@@ -51,6 +61,12 @@ export function SocketCreateParty(socket, user) {
 
 export function SocketJoinParty(roomCode, socket, user) {
   if (roomCode.trim().length === 0) return;
-  const fullName = `${user.firstname} ${user.lastname}`;
-  socket.emit('join_room', roomCode.trim().toUpperCase(), fullName);
+  if (!user) {
+    Alert.alert('Join room', 'User details are missing. Please sign in again.');
+    return;
+  }
+  socket.emit('join_room', roomCode.trim().toUpperCase(), {
+    firstname: user.firstname,
+    lastname: user.lastname,
+  });
 }

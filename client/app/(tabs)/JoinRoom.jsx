@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView
+  StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,7 +25,6 @@ export default function JoinRoom() {
 
     return () => {
       cleanup();
-      newSocket.disconnect();
     };
   }, [router]);
 
@@ -36,9 +35,12 @@ export default function JoinRoom() {
   };
 
   const handleJoinParty = () => {
-    if (socket) {
-      SocketJoinParty(roomCode, socket, user);
+    if (!socket) return;
+    if (!socket.connected) {
+      Alert.alert('Connection error', 'Still connecting to the server. Please try again.');
+      return;
     }
+    SocketJoinParty(roomCode, socket, user);
   };
 
   const handleLogout = () => {

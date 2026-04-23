@@ -8,15 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import io from 'socket.io-client';
 import Colors from '../../constants/Colors';
+import { getSocket } from '../../lib/socket.js';
 
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 
-const socket = io(SERVER_URL, {
-  transports: ['websocket'],
-  autoConnect: true,
-});
+const socket = getSocket(SERVER_URL);
 
 function SpotifyConnectSheet({ visible, onClose, onConnected, roomId }) {
   const [isConnecting, setIsConnecting] = useState(false);

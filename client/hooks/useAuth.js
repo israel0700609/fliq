@@ -34,14 +34,14 @@ const AuthProvider = ({ children }) => {
 
       const userData = {
         id: res.data.id,
-        firstname: res.data.firstname,
-        lastname: res.data.lastname,
+        firstname: res.data.firstname || res.data.first_name || '',
+        lastname: res.data.lastname || res.data.last_name || '',
         email: res.data.email,
       };
 
       const userToken = res.data.token;
 
-      storeLogin(userData, userToken);
+      await storeLogin(userData, userToken);
 
       return { success: true };
     } catch (error) {
@@ -69,14 +69,14 @@ const AuthProvider = ({ children }) => {
 
       const userData = {
         id: res.data.id,
-        firstname: res.data.firstname,
-        lastname: res.data.lastname,
+        firstname: res.data.firstname || res.data.first_name || firstname || '',
+        lastname: res.data.lastname || res.data.last_name || lastname || '',
         email: res.data.email,
       };
 
       const userToken = res.data.token;
 
-      storeLogin(userData, userToken);
+      await storeLogin(userData, userToken);
 
       return { success: true };
     } catch (error) {
