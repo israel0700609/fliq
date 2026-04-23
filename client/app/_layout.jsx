@@ -19,7 +19,7 @@ const InitialLayout = () => {
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)/WatchParty'); // או כל מסך בית שיש לך
+      router.replace('/(tabs)/WatchParty'); 
     }
   }, [isAuthenticated, loading, segments, rootNavigationState?.key]);
 
