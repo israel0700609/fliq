@@ -2,154 +2,321 @@ import { addToQueue, searchTracks } from "../spotify_api/spotify_api.js";
 import { generateCode } from "../utils/utils.js";
 import { rooms } from "../RoomState.js";
 
-const roomQueues = {}; // roomId -> queued track list
+const roomQueues = {};
+
 /*
-rooms.set(roomId, {
-    hostSocketId: 'socket_id_of_host',
-    spotifyToken: '...',
-    members: new Map([
-        ['socket_id_1', { username: 'User1' }],
-        ['socket_id_2', { username: 'User2' }]
-    ])
-});
+  roomVotes structure per roomId:
+  {
+    [trackUri]: {
+      track,
+      proposedBy: username,
+      yesVotes: Set<socketId>,
+      noVotes:  Set<socketId>,
+      locked: boolean,        // true while addToQueue is in flight — prevents race
+      timer: TimeoutHandle,   // auto-reject after 30s
+    }
+  }
 */
+const roomVotes = {}; // roomId -> { [trackUri]: voteEntry }
 
-export default function handleSocket(socket,io) {
-    console.log(`New user connected: (Socket Id: ${socket.id})`);
-    const normalizeRoomCode = (value = '') => String(value).trim().toUpperCase();
-    const findRoomId = (roomCode = '') => {
-        const normalizedCode = normalizeRoomCode(roomCode);
-        if (!normalizedCode) return null;
-        if (rooms.has(normalizedCode)) return normalizedCode;
-        const match = [...rooms.keys()].find((id) => normalizeRoomCode(id) === normalizedCode);
-        return match || null;
-    };
+const getMemberCount = (roomId) =>
+  rooms.has(roomId) ? rooms.get(roomId).members.size : 0;
 
-    const emitMemberCount = (roomId) => {
-        const count = rooms.has(roomId) ? rooms.get(roomId).members.size : 0;
-        io.to(roomId).emit('member_count', count);
-    };
-    socket.on('create_room', (username) => {
-        const roomId = normalizeRoomCode(generateCode());
-        console.log(`Room created with (roomId: ${roomId}) on (SocketId:${socket.id})`);
-        
-        rooms.set(roomId, {
-            hostSocketId: socket.id,
-            spotifyToken: null,
-            members: new Map([[socket.id, { username: username }]])
-        });
-        
-        socket.join(roomId); 
-        socket.emit('room_created', roomId);
-        emitMemberCount(roomId);
-    });
-    socket.on('join_room', (roomId, user) => {
-        const resolvedRoomId = findRoomId(roomId);
-        if (resolvedRoomId) {
-            const username = typeof user === 'string'
-                ? user
-                : `${user?.firstname ?? ''} ${user?.lastname ?? ''}`.trim() || 'Guest';
-            socket.join(resolvedRoomId);
-            console.log(`New user ${username} joined room number: ${resolvedRoomId}`);
-            const room = rooms.get(resolvedRoomId);
-            room.members.set(socket.id, { username: username });
-            socket.emit('room_joined', resolvedRoomId);
-            socket.to(resolvedRoomId).emit('user_joined', username); 
-            socket.emit('queue_updated', roomQueues[resolvedRoomId] || []);
-            emitMemberCount(resolvedRoomId);
-        } else {
-            socket.emit('error_msg', "Room dont exist.");
-        }
-    });
+const requiredYes = (roomId) => Math.floor(getMemberCount(roomId) / 2) + 1;
 
-socket.on('leave_room', (roomId) => {
-        if(rooms.has(roomId)) {
-            const room = rooms.get(roomId);
-            
-            if(room.members.has(socket.id)) {
-                const user = room.members.get(socket.id);
-                console.log(`User ${user.username} left room number: ${roomId}`);
-                
-                room.members.delete(socket.id);
-                socket.leave(roomId);
-                
-                emitMemberCount(roomId);
-
-                if (room.hostSocketId === socket.id) {
-                    console.log(`Host left. Closing room: ${roomId}`);
-                    socket.to(roomId).emit('error_msg', "The host has left the party. Room closed.");
-                    rooms.delete(roomId);
-                    delete roomQueues[roomId];
-                } 
-                else if (room.members.size === 0) {
-                    console.log(`Room ${roomId} is empty. Deleting from memory...`);
-                    rooms.delete(roomId);
-                    delete roomQueues[roomId];
-                }
-
-            } else {
-                console.log(`Warning: Socket ${socket.id} tried to leave room ${roomId} but is not in members map.`);
-            }
-        } else {
-            socket.emit('error_msg', "Room doesn't exist.");
-        }
-    });
-
-    socket.on('search_track', async (query) => {
-        try {
-            console.log(`[Spotify] Searching for: ${query}`);
-            const res = await searchTracks(query);
-
-            socket.emit('searched_track', res);
-        } catch (error) {
-            console.error('Socket Search Error:', error.message);
-            socket.emit('error_msg', 'Failed to search tracks. Please try again.');
-        }
-    });
-
-    socket.on('add_to_queue', async ({ track, roomId }) => {
-        if (!roomId || !track?.uri || !rooms.has(roomId)) {
-            socket.emit('error_msg', 'Missing room or track details.');
-            return;
-        }
-
-        const addResult = await addToQueue(track.uri, roomId);
-        if (!addResult.success) {
-            socket.emit('error_msg', addResult.error || 'Failed to add song to Spotify queue.');
-            return;
-        }
-
-        roomQueues[roomId] = [...(roomQueues[roomId] || []), track];
-        io.to(roomId).emit('queue_updated', roomQueues[roomId]);
-    });
-
-    socket.on('spotify_connected_alert', ({ roomId }) => {
-        io.to(roomId).emit('spotify_connected');
-    });
-
- socket.on('disconnect', () => {
-        console.log(`User disconnected abruptly: (Socket Id: ${socket.id})`);
-        rooms.forEach((room, roomId) => {
-            if (room.members.has(socket.id)) {
-                const user = room.members.get(socket.id);
-                console.log(`Cleaning up user ${user.username} from room ${roomId} due to disconnect.`);
-                
-                room.members.delete(socket.id);
-                emitMemberCount(roomId);
-
-                
-                if (room.hostSocketId === socket.id) {
-                    console.log(`Host disconnected abruptly. Closing room: ${roomId}`);
-                    socket.to(roomId).emit('error_msg', "The host disconnected unexpectedly. Room closed.");
-                    rooms.delete(roomId);
-                    delete roomQueues[roomId]; 
-                } 
-                else if (room.members.size === 0) {
-                    console.log(`Room ${roomId} is empty after disconnect. Deleting from memory...`);
-                    rooms.delete(roomId);
-                    delete roomQueues[roomId]; 
-                }
-            }
-        });
-    });
+const emitMemberCount = (io, roomId) => {
+  io.to(roomId).emit("member_count", getMemberCount(roomId));
 };
+
+const emitVoteState = (io, roomId, trackUri) => {
+  const vote = roomVotes[roomId]?.[trackUri];
+  if (!vote) return;
+  io.to(roomId).emit("vote_update", {
+    trackUri,
+    track: vote.track,
+    proposedBy: vote.proposedBy,
+    yesCount: vote.yesVotes.size,
+    noCount: vote.noVotes.size,
+    required: requiredYes(roomId),
+    total: getMemberCount(roomId),
+  });
+};
+
+const finalizeVote = async (io, roomId, trackUri, passed) => {
+  const votes = roomVotes[roomId];
+  if (!votes || !votes[trackUri]) return;
+
+  const vote = votes[trackUri];
+  if (vote.locked) return; // another async call already handling this
+  vote.locked = true;
+
+  clearTimeout(vote.timer);
+
+  if (passed) {
+    const result = await addToQueue(trackUri, roomId);
+    if (result.success) {
+      roomQueues[roomId] = [...(roomQueues[roomId] || []), vote.track];
+      io.to(roomId).emit("queue_updated", roomQueues[roomId]);
+      io.to(roomId).emit("vote_result", {
+        trackUri,
+        track: vote.track,
+        passed: true,
+        message: `"${vote.track.name}" was added to the queue!`,
+      });
+    } else {
+      io.to(roomId).emit("vote_result", {
+        trackUri,
+        track: vote.track,
+        passed: false,
+        message: `Spotify rejected the song: ${result.error}`,
+      });
+    }
+  } else {
+    io.to(roomId).emit("vote_result", {
+      trackUri,
+      track: vote.track,
+      passed: false,
+      message: `"${vote.track.name}" didn't get enough votes.`,
+    });
+  }
+
+  delete votes[trackUri];
+};
+
+const checkVote = async (io, roomId, trackUri) => {
+  const vote = roomVotes[roomId]?.[trackUri];
+  if (!vote || vote.locked) return;
+
+  const total = getMemberCount(roomId);
+  const needed = requiredYes(roomId);
+  const yes = vote.yesVotes.size;
+  const no = vote.noVotes.size;
+
+  if (yes >= needed) {
+    await finalizeVote(io, roomId, trackUri, true);
+    return;
+  }
+
+  const remaining = total - yes - no;
+  if (yes + remaining < needed) {
+    await finalizeVote(io, roomId, trackUri, false);
+  }
+};
+
+export default function handleSocket(socket, io) {
+  console.log(`New user connected: (Socket Id: ${socket.id})`);
+
+  const normalizeRoomCode = (value = "") => String(value).trim().toUpperCase();
+  const findRoomId = (roomCode = "") => {
+    const normalized = normalizeRoomCode(roomCode);
+    if (!normalized) return null;
+    if (rooms.has(normalized)) return normalized;
+    return (
+      [...rooms.keys()].find((id) => normalizeRoomCode(id) === normalized) ||
+      null
+    );
+  };
+
+  socket.on("create_room", (username) => {
+    const roomId = normalizeRoomCode(generateCode());
+    console.log(`Room created (roomId: ${roomId}, socketId: ${socket.id})`);
+    rooms.set(roomId, {
+      hostSocketId: socket.id,
+      spotifyToken: null,
+      members: new Map([[socket.id, { username }]]),
+    });
+    roomVotes[roomId] = {};
+    socket.join(roomId);
+    socket.emit("room_created", roomId);
+    emitMemberCount(io, roomId);
+  });
+
+  socket.on("join_room", (roomId, user) => {
+    const resolvedId = findRoomId(roomId);
+    if (!resolvedId) {
+      socket.emit("error_msg", "Room doesn't exist.");
+      return;
+    }
+    const username =
+      typeof user === "string"
+        ? user
+        : `${user?.firstname ?? ""} ${user?.lastname ?? ""}`.trim() || "Guest";
+
+    socket.join(resolvedId);
+    console.log(`${username} joined room ${resolvedId}`);
+    const room = rooms.get(resolvedId);
+    room.members.set(socket.id, { username });
+    socket.emit("room_joined", resolvedId);
+    socket.to(resolvedId).emit("user_joined", username);
+    socket.emit("queue_updated", roomQueues[resolvedId] || []);
+
+    const activeVotes = roomVotes[resolvedId] || {};
+    Object.keys(activeVotes).forEach((trackUri) => {
+      const vote = activeVotes[trackUri];
+      socket.emit("vote_started", {
+        trackUri,
+        track: vote.track,
+        proposedBy: vote.proposedBy,
+        yesCount: vote.yesVotes.size,
+        noCount: vote.noVotes.size,
+        required: requiredYes(resolvedId),
+        total: room.members.size,
+      });
+    });
+
+    emitMemberCount(io, resolvedId);
+  });
+
+  socket.on("leave_room", (roomId) => {
+    if (!rooms.has(roomId)) {
+      socket.emit("error_msg", "Room doesn't exist.");
+      return;
+    }
+    const room = rooms.get(roomId);
+    if (!room.members.has(socket.id)) return;
+
+    const user = room.members.get(socket.id);
+    console.log(`${user.username} left room ${roomId}`);
+    room.members.delete(socket.id);
+    socket.leave(roomId);
+    emitMemberCount(io, roomId);
+
+    if (room.hostSocketId === socket.id) {
+      socket.to(roomId).emit("room_closed");
+      rooms.delete(roomId);
+      delete roomQueues[roomId];
+      delete roomVotes[roomId];
+    } else if (room.members.size === 0) {
+      rooms.delete(roomId);
+      delete roomQueues[roomId];
+      delete roomVotes[roomId];
+    } else {
+      const votes = roomVotes[roomId] || {};
+      Object.keys(votes).forEach((trackUri) => {
+        checkVote(io, roomId, trackUri);
+      });
+    }
+  });
+
+  socket.on("search_track", async (query) => {
+    try {
+      const res = await searchTracks(query);
+      socket.emit("searched_track", res);
+    } catch (error) {
+      console.error("Search Error:", error.message);
+      socket.emit("error_msg", "Failed to search tracks. Please try again.");
+    }
+  });
+
+  socket.on("propose_song", ({ track, roomId }) => {
+    if (!roomId || !track?.uri || !rooms.has(roomId)) {
+      socket.emit("error_msg", "Missing room or track details.");
+      return;
+    }
+
+    if (!roomVotes[roomId]) roomVotes[roomId] = {};
+
+    if (roomVotes[roomId][track.uri]) {
+      socket.emit("error_msg", `"${track.name}" is already being voted on.`);
+      return;
+    }
+
+    const room = rooms.get(roomId);
+    const proposer = room.members.get(socket.id);
+    const proposedBy = proposer?.username || "Someone";
+
+    if (getMemberCount(roomId) === 1) {
+      addToQueue(track.uri, roomId).then((result) => {
+        if (result.success) {
+          roomQueues[roomId] = [...(roomQueues[roomId] || []), track];
+          io.to(roomId).emit("queue_updated", roomQueues[roomId]);
+        } else {
+          socket.emit(
+            "error_msg",
+            `Spotify rejected the song: ${result.error}`,
+          );
+        }
+      });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      finalizeVote(io, roomId, track.uri, false);
+    }, 30000);
+
+    roomVotes[roomId][track.uri] = {
+      track,
+      proposedBy,
+      yesVotes: new Set([socket.id]),
+      noVotes: new Set(),
+      locked: false,
+      timer,
+    };
+
+    socket.to(roomId).emit("vote_started", {
+      trackUri: track.uri,
+      track,
+      proposedBy,
+      yesCount: 1,
+      noCount: 0,
+      required: requiredYes(roomId),
+      total: getMemberCount(roomId),
+    });
+    checkVote(io, roomId, track.uri);
+  });
+
+  socket.on("cast_vote", async ({ trackUri, roomId, vote }) => {
+    if (!roomId || !trackUri || !rooms.has(roomId)) {
+      socket.emit("error_msg", "Missing room or track details.");
+      return;
+    }
+
+    const voteEntry = roomVotes[roomId]?.[trackUri];
+    if (!voteEntry) {
+      socket.emit("error_msg", "This vote no longer exists.");
+      return;
+    }
+    if (voteEntry.locked) return;
+
+    voteEntry.yesVotes.delete(socket.id);
+    voteEntry.noVotes.delete(socket.id);
+
+    if (vote === "yes") voteEntry.yesVotes.add(socket.id);
+    else voteEntry.noVotes.add(socket.id);
+
+    emitVoteState(io, roomId, trackUri);
+    await checkVote(io, roomId, trackUri);
+  });
+
+  socket.on("spotify_connected_alert", ({ roomId }) => {
+    io.to(roomId).emit("spotify_connected");
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.id}`);
+    rooms.forEach((room, roomId) => {
+      if (!room.members.has(socket.id)) return;
+
+      const user = room.members.get(socket.id);
+      console.log(`Cleaning up ${user.username} from room ${roomId}`);
+      room.members.delete(socket.id);
+      emitMemberCount(io, roomId);
+
+      if (room.hostSocketId === socket.id) {
+        socket.to(roomId).emit("room_closed");
+        rooms.delete(roomId);
+        delete roomQueues[roomId];
+        delete roomVotes[roomId];
+      } else if (room.members.size === 0) {
+        rooms.delete(roomId);
+        delete roomQueues[roomId];
+        delete roomVotes[roomId];
+      } else {
+        const votes = roomVotes[roomId] || {};
+        Object.keys(votes).forEach((trackUri) => {
+          checkVote(io, roomId, trackUri);
+        });
+      }
+    });
+  });
+}
