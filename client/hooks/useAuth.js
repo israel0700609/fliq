@@ -1,6 +1,6 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useAuthStore from '../store/useAuthStore';
 
 const AuthContext = createContext();
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
@@ -8,31 +8,19 @@ const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 const useAuth = () => useContext(AuthContext);
 
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, token, login: storeLogin, logout: storeLogout, loadUser, loading } = useAuthStore();
 
   useEffect(() => {
-    const loadStoredData = async () => {
-      try {
-        const savedToken = await AsyncStorage.getItem('token');
-        const savedUser = await AsyncStorage.getItem('user');
-        
-        if (savedToken) {
-          setToken(savedToken);
-          axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-        }
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-      } catch (e) {
-        console.error("Failed to load auth data", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadStoredData();
-  }, []);
+    loadUser();
+  }, [loadUser]);
+
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  }, [token]);
 
   const login = async (email, password) => {
     try {
@@ -46,19 +34,14 @@ const AuthProvider = ({ children }) => {
 
       const userData = {
         id: res.data.id,
-        firstname: res.data.firstname,
-        lastname: res.data.lastname,
+        firstname: res.data.firstname || res.data.first_name || '',
+        lastname: res.data.lastname || res.data.last_name || '',
         email: res.data.email,
       };
 
       const userToken = res.data.token;
 
-      setUser(userData);
-      setToken(userToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${userToken}`;
-
-      await AsyncStorage.setItem('token', userToken);
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      await storeLogin(userData, userToken);
 
       return { success: true };
     } catch (error) {
@@ -86,53 +69,37 @@ const AuthProvider = ({ children }) => {
 
       const userData = {
         id: res.data.id,
-        firstname: res.data.firstname,
-        lastname: res.data.lastname,
+        firstname: res.data.firstname || res.data.first_name || firstname || '',
+        lastname: res.data.lastname || res.data.last_name || lastname || '',
         email: res.data.email,
       };
 
       const userToken = res.data.token;
 
-      setUser(userData);
-      setToken(userToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${userToken}`;
-
-      await AsyncStorage.setItem('token', userToken);
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      await storeLogin(userData, userToken);
 
       return { success: true };
     } catch (error) {
       const isNetworkError = !error.response;
-      return {
-        success: false,
+      return { 
+        success: false, 
         message: isNetworkError
           ? 'Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status.'
-          : error.response?.data?.message || 'Register failed'
+          : error.response?.data?.message || 'Login failed'
       };
     }
   };
 
   const logout = async () => {
-    setToken(null);
-    setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('user');
+    await storeLogout();
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      token, 
-      login, 
-      register, 
-      logout, 
-      loading,
-      isAuthenticated: !!token 
-    }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!token, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export { useAuth, AuthProvider };
+export { AuthProvider, useAuth };
+

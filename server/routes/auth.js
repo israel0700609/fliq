@@ -10,7 +10,7 @@ const cleanEnv = (value = '') =>
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '7d'
+        expiresIn: '2m'
     });
 };
 
@@ -33,6 +33,8 @@ router.post('/register', async (req, res) => {
         res.status(201).json({
             id: user.id,
             email: user.email,
+            firstname: firstname,
+            lastname: lastname,
             token: generateToken(user.id)
         });
     } catch (error) {
@@ -49,16 +51,21 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Missing email or password' });
         }
 
-        const user = await login(email, password);
+        const authData = await login(email, password);
+        const user = authData?.user;
         
         if (!user) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
+        const metadata = user.user_metadata || {};
+        const firstname = user.firstname || metadata.first_name || metadata.firstname || '';
+        const lastname = user.lastname || metadata.last_name || metadata.lastname || '';
+
         res.status(200).json({
             id: user.id,
-            firstname: user.firstname,
-            lastname: user.lastname,
+            firstname,
+            lastname,
             email: user.email,
             token: generateToken(user.id)
         });

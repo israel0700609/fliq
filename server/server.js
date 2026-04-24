@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import {supabase,connectDB} from './config/db.js';
 import authRoutes from './routes/auth.js';
+import userRoutes from './routes/user.js';
 import { createServer } from 'http';
 import { Server } from "socket.io";
 import handleSocket from './Services/network.js';
@@ -16,6 +17,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use('/api', userRoutes);
 
 
 const httpServer = createServer(app);

@@ -1,30 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView
+  StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Colors from '../../constants/Colors';
-import {handleSocket,SocketCreateParty,SocketJoinParty,getSocket} from '../../lib/socket.js';
-const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
+import { handleSocket, SocketCreateParty, SocketJoinParty, getSocket } from '../../lib/socket.js';
+import { useAuth } from '../../hooks/useAuth.js';
 
-const socket = getSocket(SERVER_URL);
+const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 
 export default function JoinRoom() {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [roomCode, setRoomCode] = useState('');
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    return handleSocket(socket, router);
+    const newSocket = getSocket(SERVER_URL);
+    setSocket(newSocket);
+
+    const cleanup = handleSocket(newSocket, router);
+
+    return () => {
+      cleanup();
+    };
   }, [router]);
 
   const handleCreateParty = () => {
-    SocketCreateParty(socket);
+    if (socket) {
+      SocketCreateParty(socket, user);
+    }
   };
 
   const handleJoinParty = () => {
-    SocketJoinParty(roomCode,socket);
+    if (!socket) return;
+    if (!socket.connected) {
+      Alert.alert('Connection error', 'Still connecting to the server. Please try again.');
+      return;
+    }
+    SocketJoinParty(roomCode, socket, user);
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -37,6 +57,9 @@ export default function JoinRoom() {
 
           {/* Brand */}
           <View style={styles.brandRow}>
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+              <Ionicons name="log-out-outline" size={24} color={Colors.textMuted} />
+            </TouchableOpacity>
             <View style={styles.filmStrip}>
               {[...Array(4)].map((_, i) => <View key={i} style={styles.filmHole} />)}
             </View>
@@ -254,5 +277,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  logoutButton: {
+    position: 'absolute',
+    top: 10,
+    left: 0,
+    zIndex: 1,
   },
 });
