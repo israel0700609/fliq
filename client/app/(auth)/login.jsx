@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -10,39 +10,33 @@ import {
   Platform,
   StyleSheet,
   ActivityIndicator,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
-
-import { useApp } from '../../hooks/AppContext';
-import { getColors } from '../../constants/theme';
-import { validate, checkValidationLogin } from '../../lib/utils';
-import { useAuth } from '../../hooks/useAuth.js';
-import { navigate } from 'expo-router/build/global-state/routing.js';
+  ScrollView,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useRouter } from "expo-router";
+import { useApp } from "../../hooks/AppContext";
+import { getColors } from "../../constants/theme";
+import { validate, checkValidationLogin } from "../../lib/utils";
+import { useAuth } from "../../hooks/useAuth.js";
 
 export default function LoginScreen() {
   const router = useRouter();
   const { isDark, isLandscape } = useApp();
-  const colors = getColors(isDark);
+  const c = getColors(isDark);
+  const styles = useMemo(() => createStyles(c), [c]);
 
   const [showPassword, setShowPassword] = useState(true);
-  const [values, setValues] = useState({ email: '', password: '' });
+  const [values, setValues] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const { login } = useAuth();
   const [isPending, setIsPending] = useState(false);
 
   const updateField = (name, value) => {
-    const err = validate(name, value);
     setValues((p) => ({ ...p, [name]: value }));
-    setErrors((p) => ({ ...p, [name]: err }));
+    setErrors((p) => ({ ...p, [name]: validate(name, value) }));
   };
 
   const isFormValid = checkValidationLogin(values, errors);
-
-  const styles = useMemo(
-    () => createStyles(colors, isLandscape),
-    [colors, isLandscape]
-  );
 
   function renderInput(label, name, secure = false) {
     const isFieldValid = values[name]?.length > 0 && !errors[name];
@@ -51,10 +45,10 @@ export default function LoginScreen() {
         <Text style={styles.inputLabel}>{label}</Text>
         <TextInput
           placeholder={`Enter your ${label.toLowerCase()}`}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           secureTextEntry={secure}
           autoCapitalize="none"
-          inputMode={name === 'email' ? 'email' : 'text'}
+          inputMode={name === "email" ? "email" : "text"}
           style={[
             styles.input,
             errors[name] && styles.inputError,
@@ -74,15 +68,22 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboard}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: c.background }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
-
-          {/* Top branding area */}
-          <View style={styles.brandArea}>
-            {/* Film strip decoration */}
+        <ScrollView
+          contentContainerStyle={[
+            styles.scroll,
+            isLandscape && styles.scrollLandscape,
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Brand */}
+          <View
+            style={[styles.brandArea, isLandscape && styles.brandAreaLandscape]}
+          >
             <View style={styles.filmStrip}>
               {[...Array(6)].map((_, i) => (
                 <View key={i} style={styles.filmHole} />
@@ -99,22 +100,25 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Form area */}
-          <View style={[styles.form, { width: isLandscape ? 350 : '100%', maxWidth: 400 }]}>
+          {/* Form */}
+          <View style={[styles.form, isLandscape && styles.formLandscape]}>
             <Text style={styles.formTitle}>Welcome back</Text>
-
-            {renderInput('Email', 'email')}
-            {renderInput('Password', 'password', showPassword)}
-
-            <Pressable onPress={() => setShowPassword((p) => !p)} style={styles.toggleContainer}>
+            {renderInput("Email", "email")}
+            {renderInput("Password", "password", showPassword)}
+            <Pressable
+              onPress={() => setShowPassword((p) => !p)}
+              style={styles.toggleContainer}
+            >
               <Text style={styles.toggleText}>
-                {showPassword ? '+ show password' : '− hide password'}
+                {showPassword ? "+ show password" : "− hide password"}
               </Text>
             </Pressable>
-
             <Pressable
               disabled={!isFormValid || isPending}
-              style={[styles.button, (!isFormValid || isPending) && styles.disabled]}
+              style={[
+                styles.button,
+                (!isFormValid || isPending) && styles.disabled,
+              ]}
               onPress={async () => {
                 setIsPending(true);
                 try {
@@ -123,69 +127,76 @@ export default function LoginScreen() {
                     alert(result.message);
                     return;
                   }
-                  router.replace('/(tabs)/JoinRoom');
+                  router.replace("/(tabs)/JoinRoom");
                 } catch {
-                  alert('Something went wrong. Please check your connection.');
+                  alert("Something went wrong.");
                 } finally {
                   setIsPending(false);
                 }
               }}
             >
               {isPending ? (
-                <ActivityIndicator color={colors.background} />
+                <ActivityIndicator color={c.background} />
               ) : (
                 <Text style={styles.buttonText}>Let me in</Text>
               )}
             </Pressable>
-
-            <Pressable onPress={() => router.push('/(auth)/register')} style={styles.linkContainer}>
+            <Pressable
+              onPress={() => router.push("/(auth)/register")}
+              style={styles.linkContainer}
+            >
               <Text style={styles.linkText}>
-                New here?{'  '}
+                New here?{"  "}
                 <Text style={styles.linkHighlight}>Create account →</Text>
               </Text>
             </Pressable>
           </View>
-
-          <StatusBar style={isDark ? 'light' : 'dark'} />
-        </View>
+        </ScrollView>
       </TouchableWithoutFeedback>
+      <StatusBar style={isDark ? "light" : "dark"} />
     </KeyboardAvoidingView>
   );
 }
 
-const createStyles = (c, landscape) =>
+const createStyles = (c) =>
   StyleSheet.create({
-    keyboard: { flex: 1 },
-    container: {
-      flex: 1,
-      backgroundColor: c.background,
-      alignItems: 'center',
-      justifyContent: 'center',
+    scroll: {
+      flexGrow: 1,
+      alignItems: "center",
+      justifyContent: "center",
       paddingHorizontal: 24,
+      paddingVertical: 40,
     },
-
-    /* Brand */
+    scrollLandscape: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 24,
+      gap: 40,
+    },
     brandArea: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 16,
       marginBottom: 40,
     },
-    filmStrip: {
-      gap: 6,
+    brandAreaLandscape: {
+      flexDirection: "column",
+      marginBottom: 0,
+      width: 160,
+      gap: 20,
     },
+    filmStrip: { gap: 6 },
     filmHole: {
       width: 8,
       height: 8,
       borderRadius: 2,
       backgroundColor: c.border,
     },
-    brandContent: {
-      alignItems: 'center',
-    },
+    brandContent: { alignItems: "center" },
     appName: {
       fontSize: 42,
-      fontWeight: '900',
+      fontWeight: "900",
       color: c.primary,
       letterSpacing: 10,
     },
@@ -193,29 +204,24 @@ const createStyles = (c, landscape) =>
       fontSize: 11,
       color: c.textMuted,
       letterSpacing: 3,
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
       marginTop: 2,
     },
-
-    /* Form */
+    form: { width: "100%", maxWidth: 400 },
+    formLandscape: { flex: 1, maxWidth: 380 },
     formTitle: {
       fontSize: 20,
-      fontWeight: '600',
+      fontWeight: "600",
       color: c.text,
       marginBottom: 24,
     },
-    form: {
-      alignSelf: 'center',
-    },
-    inputWrapper: {
-      marginBottom: 4,
-    },
+    inputWrapper: { marginBottom: 4 },
     inputLabel: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: "600",
       color: c.textMuted,
       letterSpacing: 1.5,
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
       marginBottom: 6,
     },
     input: {
@@ -228,12 +234,8 @@ const createStyles = (c, landscape) =>
       color: c.text,
       fontSize: 15,
     },
-    inputError: {
-      borderColor: c.error,
-    },
-    inputSuccess: {
-      borderColor: c.success,
-    },
+    inputError: { borderColor: c.error },
+    inputSuccess: { borderColor: c.success },
     errorText: {
       color: c.error,
       fontSize: 12,
@@ -241,43 +243,22 @@ const createStyles = (c, landscape) =>
       marginLeft: 2,
       height: 18,
     },
-
-    /* Controls */
-    toggleContainer: {
-      alignItems: 'flex-end',
-      marginBottom: 22,
-      marginTop: 2,
-    },
-    toggleText: {
-      color: c.textMuted,
-      fontSize: 13,
-      fontWeight: '500',
-    },
+    toggleContainer: { alignItems: "flex-end", marginBottom: 22, marginTop: 2 },
+    toggleText: { color: c.textMuted, fontSize: 13, fontWeight: "500" },
     button: {
       backgroundColor: c.primary,
       paddingVertical: 15,
       borderRadius: 8,
-      alignItems: 'center',
+      alignItems: "center",
     },
-    disabled: {
-      backgroundColor: c.border,
-    },
+    disabled: { backgroundColor: c.border },
     buttonText: {
       color: c.background,
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: "700",
       letterSpacing: 0.5,
     },
-    linkContainer: {
-      marginTop: 28,
-      alignItems: 'center',
-    },
-    linkText: {
-      color: c.textMuted,
-      fontSize: 14,
-    },
-    linkHighlight: {
-      color: c.primary,
-      fontWeight: '600',
-    },
+    linkContainer: { marginTop: 28, alignItems: "center" },
+    linkText: { color: c.textMuted, fontSize: 14 },
+    linkHighlight: { color: c.primary, fontWeight: "600" },
   });

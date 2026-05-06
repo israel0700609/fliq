@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect } from 'react';
-import axios from 'axios';
-import useAuthStore from '../store/useAuthStore';
+import React, { createContext, useContext, useEffect } from "react";
+import axios from "axios";
+import useAuthStore from "../store/useAuthStore";
 
 const AuthContext = createContext();
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
@@ -8,7 +8,14 @@ const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 const useAuth = () => useContext(AuthContext);
 
 const AuthProvider = ({ children }) => {
-  const { user, token, login: storeLogin, logout: storeLogout, loadUser, loading } = useAuthStore();
+  const {
+    user,
+    token,
+    login: storeLogin,
+    logout: storeLogout,
+    loadUser,
+    loading,
+  } = useAuthStore();
 
   useEffect(() => {
     loadUser();
@@ -16,9 +23,9 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
-      delete axios.defaults.headers.common['Authorization'];
+      delete axios.defaults.headers.common["Authorization"];
     }
   }, [token]);
 
@@ -27,50 +34,65 @@ const AuthProvider = ({ children }) => {
       if (!SERVER_URL) {
         return {
           success: false,
-          message: 'Missing EXPO_PUBLIC_SERVER_URL in client/.env',
+          message: "Missing EXPO_PUBLIC_SERVER_URL in client/.env",
         };
       }
-      const res = await axios.post(`${SERVER_URL}/api/auth/login`, { email, password });
-
-      const userData = {
-        id: res.data.id,
-        firstname: res.data.firstname || res.data.first_name || '',
-        lastname: res.data.lastname || res.data.last_name || '',
-        email: res.data.email,
-      };
-
-      const userToken = res.data.token;
-
-      await storeLogin(userData, userToken);
-
-      return { success: true };
-    } catch (error) {
-      const isNetworkError = !error.response;
-      return { 
-        success: false, 
-        message: isNetworkError
-          ? 'Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status.'
-          : error.response?.data?.message || 'Login failed'
-      };
-    }
-  };
-
-  const register = async (firstname, lastname, email, password, phone, birthday) => {
-    try {
-      if (!SERVER_URL) {
-        return {
-          success: false,
-          message: 'Missing EXPO_PUBLIC_SERVER_URL in client/.env',
-        };
-      }
-      const res = await axios.post(`${SERVER_URL}/api/auth/register`, {
-        firstname, lastname, email, password, phone, birthday
+      const res = await axios.post(`${SERVER_URL}/api/auth/login`, {
+        email,
+        password,
       });
 
       const userData = {
         id: res.data.id,
-        firstname: res.data.firstname || res.data.first_name || firstname || '',
-        lastname: res.data.lastname || res.data.last_name || lastname || '',
+        firstname: res.data.firstname,
+        lastname: res.data.lastname,
+        email: res.data.email,
+        phone: res.data.phone,
+      };
+      const userToken = res.data.token;
+
+      await storeLogin(userData, userToken);
+
+      return { success: true };
+    } catch (error) {
+      const isNetworkError = !error.response;
+      return {
+        success: false,
+        message: isNetworkError
+          ? "Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status."
+          : error.response?.data?.message || "Login failed",
+      };
+    }
+  };
+
+  const register = async (
+    firstname,
+    lastname,
+    email,
+    password,
+    phone,
+    birthday,
+  ) => {
+    try {
+      if (!SERVER_URL) {
+        return {
+          success: false,
+          message: "Missing EXPO_PUBLIC_SERVER_URL in client/.env",
+        };
+      }
+      const res = await axios.post(`${SERVER_URL}/api/auth/register`, {
+        firstname,
+        lastname,
+        email,
+        password,
+        phone,
+        birthday,
+      });
+
+      const userData = {
+        id: res.data.id,
+        firstname: res.data.firstname || res.data.first_name || firstname || "",
+        lastname: res.data.lastname || res.data.last_name || lastname || "",
         email: res.data.email,
       };
 
@@ -81,11 +103,11 @@ const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       const isNetworkError = !error.response;
-      return { 
-        success: false, 
+      return {
+        success: false,
         message: isNetworkError
-          ? 'Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status.'
-          : error.response?.data?.message || 'Login failed'
+          ? "Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status."
+          : error.response?.data?.message || "Login failed",
       };
     }
   };
@@ -94,12 +116,56 @@ const AuthProvider = ({ children }) => {
     await storeLogout();
   };
 
+  const updateUser = async (updateData) => {
+    try {
+      if (!token) return { success: false, message: "Not authenticated" };
+
+      const payload = {
+        first_name: updateData.firstname,
+        last_name: updateData.lastname,
+        phone: updateData.phone,
+      };
+
+      const res = await axios.put(`${SERVER_URL}/api/user/update`, payload);
+
+      const updatedUser = {
+        ...user,
+        firstname: res.data.user.first_name,
+        lastname: res.data.user.last_name,
+        phone: res.data.user.phone,
+      };
+
+      await storeLogin(updatedUser, token);
+
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      console.error("updateUser error:", error.message);
+      const isNetworkError = !error.response;
+      return {
+        success: false,
+        message: isNetworkError
+          ? "Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status."
+          : error.response?.data?.message || "Update failed",
+      };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!token, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        login,
+        register,
+        logout,
+        updateUser,
+        isAuthenticated: !!token,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export { AuthProvider, useAuth };
-

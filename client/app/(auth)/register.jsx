@@ -1,5 +1,4 @@
-import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -12,18 +11,19 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
-} from 'react-native';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-
-import { useApp } from '../../hooks/AppContext.js';
-import { getColors } from '../../constants/theme.js';
-import { useAuth } from '../../hooks/useAuth.js';
-import { useRouter } from 'expo-router';
-import { calculateAge, validate, checkValidation } from '../../lib/utils.js';
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useRouter } from "expo-router";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { useApp } from "../../hooks/AppContext";
+import { getColors } from "../../constants/theme";
+import { calculateAge, validate, checkValidation } from "../../lib/utils";
+import { useAuth } from "../../hooks/useAuth.js";
 
 export default function RegisterScreen() {
   const { isDark, isLandscape } = useApp();
-  const colors = getColors(isDark);
+  const c = getColors(isDark);
+  const styles = useMemo(() => createStyles(c), [c]);
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(true);
@@ -31,28 +31,21 @@ export default function RegisterScreen() {
   const [birthday, setBirthday] = useState(null);
   const { register } = useAuth();
   const [isPending, setIsPending] = useState(false);
-
   const [values, setValues] = useState({
-    firstname: '',
-    lastname: '',
-    email: '',
-    phone: '',
-    password: '',
+    firstname: "",
+    lastname: "",
+    email: "",
+    phone: "",
+    password: "",
   });
   const [errors, setErrors] = useState({});
 
   const updateField = (name, value) => {
-    const err = validate(name, value);
     setValues((p) => ({ ...p, [name]: value }));
-    setErrors((p) => ({ ...p, [name]: err }));
+    setErrors((p) => ({ ...p, [name]: validate(name, value) }));
   };
 
   const isFormValid = checkValidation(values, errors, birthday);
-
-  const styles = useMemo(
-    () => createStyles(colors, isLandscape),
-    [colors, isLandscape]
-  );
 
   function renderInput(label, name, secure = false, optional = false) {
     const isFieldValid = values[name]?.length > 0 && !errors[name];
@@ -64,10 +57,12 @@ export default function RegisterScreen() {
         </View>
         <TextInput
           placeholder={`Enter your ${label.toLowerCase()}`}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           secureTextEntry={secure}
           autoCapitalize="none"
-          inputMode={name === 'email' ? 'email' : name === 'phone' ? 'tel' : 'text'}
+          inputMode={
+            name === "email" ? "email" : name === "phone" ? "tel" : "text"
+          }
           style={[
             styles.input,
             errors[name] && styles.inputError,
@@ -85,134 +80,161 @@ export default function RegisterScreen() {
     );
   }
 
+  const Header = (
+    <View style={[styles.header, isLandscape && styles.headerLandscape]}>
+      <Text style={styles.appName}>FLIQ</Text>
+      <View style={styles.dividerLine} />
+      <Text style={styles.subtitle}>Create your account</Text>
+    </View>
+  );
+
+  const Form = (
+    <View style={[styles.form, isLandscape && styles.formLandscape]}>
+      <Text style={styles.stepLabel}>who are you?</Text>
+
+      <View style={styles.row}>
+        <View style={{ flex: 1 }}>
+          {renderInput("First name", "firstname")}
+        </View>
+        <View style={{ flex: 1 }}>{renderInput("Last name", "lastname")}</View>
+      </View>
+
+      {renderInput("Email", "email", false, true)}
+      {renderInput("Phone", "phone", false, true)}
+      {renderInput("Password", "password", showPassword)}
+
+      <Pressable
+        onPress={() => setShowPassword((p) => !p)}
+        style={styles.toggleContainer}
+      >
+        <Text style={styles.toggleText}>
+          {showPassword ? "+ show password" : "− hide password"}
+        </Text>
+      </Pressable>
+
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>Date of birth</Text>
+        <Pressable
+          style={[styles.input, { justifyContent: "center" }]}
+          onPress={() => setShowDate(true)}
+        >
+          <Text
+            style={{ color: birthday ? c.text : c.textMuted, fontSize: 15 }}
+          >
+            {birthday ? birthday.toLocaleDateString() : "Select your birthday"}
+          </Text>
+        </Pressable>
+        {birthday && calculateAge(birthday) < 21 ? (
+          <Text style={styles.errorText}>
+            You must be at least 21 years old
+          </Text>
+        ) : (
+          <View style={{ height: 16 }} />
+        )}
+      </View>
+
+      <DateTimePickerModal
+        isVisible={showDate}
+        mode="date"
+        maximumDate={new Date()}
+        isDarkModeEnabled={isDark}
+        onConfirm={(d) => {
+          setBirthday(d);
+          setShowDate(false);
+        }}
+        onCancel={() => setShowDate(false)}
+      />
+
+      <Pressable
+        disabled={!isFormValid || isPending}
+        style={[styles.button, (!isFormValid || isPending) && styles.disabled]}
+        onPress={async () => {
+          setIsPending(true);
+          try {
+            const result = await register(
+              values.firstname,
+              values.lastname,
+              values.email,
+              values.password,
+              values.phone,
+              birthday,
+            );
+            if (!result.success) alert(result.message);
+          } catch {
+            alert("Something went wrong.");
+          } finally {
+            setIsPending(false);
+          }
+        }}
+      >
+        {isPending ? (
+          <ActivityIndicator color={c.background} />
+        ) : (
+          <Text style={styles.buttonText}>Join Fliq</Text>
+        )}
+      </Pressable>
+
+      <Pressable
+        onPress={() => router.push("/(auth)/login")}
+        style={styles.linkContainer}
+      >
+        <Text style={styles.linkText}>
+          Already have an account?{"  "}
+          <Text style={styles.linkHighlight}>Sign in →</Text>
+        </Text>
+      </Pressable>
+    </View>
+  );
+
   return (
     <KeyboardAvoidingView
-      style={styles.keyboard}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: c.background }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            isLandscape && styles.scrollLandscape,
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.appName}>FLIQ</Text>
-            <View style={styles.dividerLine} />
-            <Text style={styles.subtitle}>Create your account</Text>
-          </View>
-
-          {/* Step label */}
-          <Text style={styles.stepLabel}>who are you?</Text>
-
-          <View style={[styles.form, { width: isLandscape ? 360 : '100%', maxWidth: 420 }]}>
-
-            {/* Name row */}
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                {renderInput('First name', 'firstname')}
-              </View>
-              <View style={{ flex: 1 }}>
-                {renderInput('Last name', 'lastname')}
-              </View>
-            </View>
-
-            {renderInput('Email', 'email', false, true)}
-            {renderInput('Phone', 'phone', false, true)}
-            {renderInput('Password', 'password', showPassword)}
-
-            <Pressable onPress={() => setShowPassword((p) => !p)} style={styles.toggleContainer}>
-              <Text style={styles.toggleText}>
-                {showPassword ? '+ show password' : '− hide password'}
-              </Text>
-            </Pressable>
-
-            {/* Birthday picker */}
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Date of birth</Text>
-              <Pressable style={styles.input} onPress={() => setShowDate(true)}>
-                <Text style={{ color: birthday ? colors.text : colors.textMuted, fontSize: 15 }}>
-                  {birthday ? birthday.toLocaleDateString() : 'Select your birthday'}
-                </Text>
-              </Pressable>
-              {birthday && calculateAge(birthday) < 21 ? (
-                <Text style={styles.errorText}>You must be at least 21 years old</Text>
-              ) : (
-                <View style={{ height: 16 }} />
-              )}
-            </View>
-
-            <DateTimePickerModal
-              isVisible={showDate}
-              mode="date"
-              maximumDate={new Date()}
-              isDarkModeEnabled={isDark}
-              onConfirm={(d) => { setBirthday(d); setShowDate(false); }}
-              onCancel={() => setShowDate(false)}
-            />
-
-            <Pressable
-              disabled={!isFormValid || isPending}
-              style={[styles.button, (!isFormValid || isPending) && styles.disabled]}
-              onPress={async () => {
-                setIsPending(true);
-                try {
-                  const result = await register(
-                    values.firstname, values.lastname,
-                    values.email, values.password,
-                    values.phone, birthday
-                  );
-                  if (!result.success) alert(result.message);
-                } catch {
-                  alert('Something went wrong. Please check your connection.');
-                } finally {
-                  setIsPending(false);
-                }
-              }}
-            >
-              {isPending ? (
-                <ActivityIndicator color={colors.background} />
-              ) : (
-                <Text style={styles.buttonText}>Join Fliq</Text>
-              )}
-            </Pressable>
-
-            <Pressable onPress={() => router.push('/(auth)/login')} style={styles.linkContainer}>
-              <Text style={styles.linkText}>
-                Already have an account?{'  '}
-                <Text style={styles.linkHighlight}>Sign in →</Text>
-              </Text>
-            </Pressable>
-          </View>
-
-          <StatusBar style={isDark ? 'light' : 'dark'} />
+          {Header}
+          {Form}
         </ScrollView>
       </TouchableWithoutFeedback>
+      <StatusBar style={isDark ? "light" : "dark"} />
     </KeyboardAvoidingView>
   );
 }
 
-const createStyles = (c, landscape) =>
+const createStyles = (c) =>
   StyleSheet.create({
-    keyboard: { flex: 1, backgroundColor: c.background },
     scroll: {
       flexGrow: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       paddingHorizontal: 24,
       paddingVertical: 48,
-      backgroundColor: c.background,
     },
-
-    /* Header */
-    header: {
-      alignItems: 'center',
-      marginBottom: 32,
+    scrollLandscape: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "center",
+      paddingVertical: 24,
+      gap: 40,
+    },
+    header: { alignItems: "center", marginBottom: 32 },
+    headerLandscape: {
+      width: 160,
+      justifyContent: "center",
+      marginBottom: 0,
+      paddingTop: 24,
     },
     appName: {
       fontSize: 36,
-      fontWeight: '900',
+      fontWeight: "900",
       color: c.primary,
       letterSpacing: 10,
     },
@@ -226,47 +248,37 @@ const createStyles = (c, landscape) =>
       fontSize: 15,
       color: c.textMuted,
       letterSpacing: 0.5,
+      textAlign: "center",
     },
-
     stepLabel: {
-      alignSelf: 'flex-start',
       fontSize: 11,
       color: c.textMuted,
       letterSpacing: 2,
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
       marginBottom: 12,
     },
-
-    /* Form */
-    form: {
-      alignSelf: 'center',
-      width: '100%',
-    },
-    row: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    inputWrapper: {
-      marginBottom: 2,
-    },
+    form: { width: "100%", maxWidth: 420 },
+    formLandscape: { flex: 1, maxWidth: 420 },
+    row: { flexDirection: "row", gap: 12 },
+    inputWrapper: { marginBottom: 2 },
     labelRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 8,
       marginBottom: 6,
     },
     inputLabel: {
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: "600",
       color: c.textMuted,
       letterSpacing: 1.5,
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
     },
     optionalTag: {
       fontSize: 10,
       color: c.textMuted,
       opacity: 0.5,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
     input: {
       backgroundColor: c.surface,
@@ -277,14 +289,9 @@ const createStyles = (c, landscape) =>
       paddingVertical: 13,
       color: c.text,
       fontSize: 15,
-      justifyContent: 'center',
     },
-    inputError: {
-      borderColor: c.error,
-    },
-    inputSuccess: {
-      borderColor: c.success,
-    },
+    inputError: { borderColor: c.error },
+    inputSuccess: { borderColor: c.success },
     errorText: {
       color: c.error,
       fontSize: 12,
@@ -292,45 +299,27 @@ const createStyles = (c, landscape) =>
       marginLeft: 2,
       height: 16,
     },
-
     toggleContainer: {
-      alignItems: 'flex-end',
+      alignItems: "flex-end",
       marginBottom: 16,
       marginTop: -2,
     },
-    toggleText: {
-      color: c.textMuted,
-      fontSize: 13,
-      fontWeight: '500',
-    },
-
+    toggleText: { color: c.textMuted, fontSize: 13, fontWeight: "500" },
     button: {
       backgroundColor: c.primary,
       paddingVertical: 15,
       borderRadius: 8,
-      alignItems: 'center',
+      alignItems: "center",
       marginTop: 8,
     },
-    disabled: {
-      backgroundColor: c.border,
-    },
+    disabled: { backgroundColor: c.border },
     buttonText: {
       color: c.background,
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: "700",
       letterSpacing: 0.5,
     },
-
-    linkContainer: {
-      marginTop: 28,
-      alignItems: 'center',
-    },
-    linkText: {
-      color: c.textMuted,
-      fontSize: 14,
-    },
-    linkHighlight: {
-      color: c.primary,
-      fontWeight: '600',
-    },
+    linkContainer: { marginTop: 28, alignItems: "center" },
+    linkText: { color: c.textMuted, fontSize: 14 },
+    linkHighlight: { color: c.primary, fontWeight: "600" },
   });
