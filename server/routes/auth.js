@@ -1,192 +1,214 @@
 import { Router } from "express";
-import jwt from 'jsonwebtoken';
-import { isUserExists, registerNewUser, login, deleteUser, updateUser, getUserById } from "../supabase_api/authdb.js";
+import jwt from "jsonwebtoken";
+import {
+  isUserExists,
+  registerNewUser,
+  login,
+  deleteUser,
+  updateUser,
+  getUserById,
+} from "../supabase_api/authdb.js";
 import { getHostToken, saveTokenForRoom } from "../spotify_api/spotify_api.js";
 
 const router = Router();
 
-const cleanEnv = (value = '') =>
-    String(value).trim().replace(/^['"]|['"]$/g, '').replace(/;$/, '');
+const cleanEnv = (value = "") =>
+  String(value)
+    .trim()
+    .replace(/^['"]|['"]$/g, "")
+    .replace(/;$/, "");
 
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '2m'
-    });
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "2m",
+  });
 };
 
-router.post('/register', async (req, res) => {
-    try {
-        const { firstname, lastname, email, password, phone, birthday } = req.body;
+router.post("/register", async (req, res) => {
+  try {
+    const { firstname, lastname, email, password, phone, birthday } = req.body;
 
-        if (!firstname || !lastname || !email || !password || !phone || !birthday) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
-        const userExists = await isUserExists(email);
-        if (userExists) {
-            return res.status(409).json({ message: 'User already exists' });
-        }
-
-        const newUser = await registerNewUser(email, password, firstname, lastname, phone, birthday);
-        const user = newUser.user;
-
-        res.status(201).json({
-            id: user.id,
-            email: user.email,
-            firstname: firstname,
-            lastname: lastname,
-            token: generateToken(user.id)
-        });
-    } catch (error) {
-        console.error("Register Router Error:", error.message);
-        res.status(500).json({ message: error.message });
-    }
-});
-
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Missing email or password' });
-        }
-
-        const authData = await login(email, password);
-        const user = authData?.user;
-        
-        if (!user) {
-            return res.status(401).json({ message: 'Invalid email or password' });
-        }
-
-        const metadata = user.user_metadata || {};
-        const firstname = user.firstname || metadata.first_name || metadata.firstname || '';
-        const lastname = user.lastname || metadata.last_name || metadata.lastname || '';
-
-        res.status(200).json({
-            id: user.id,
-            firstname,
-            lastname,
-            email: user.email,
-            token: generateToken(user.id)
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-router.get('/user/:id', async (req, res) => {
-    try {
-        const { data: user, error } = getUserById(req.params.id);
-
-        if (error || !user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-router.patch('/user/:id', async (req, res) => {
-    try {
-        const updates = req.body;
-        
-        delete updates.id;
-        delete updates._id;
-
-        const { data: updatedUser, error } = updateUser(updates);
-
-        if (error) throw error;
-
-        res.status(200).json({
-            message: 'User updated successfully',
-            user: updatedUser
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-router.delete('/user/:id', async (req, res) => {
-    try {
-        deleteUser(req.params.id);
-        res.status(200).json({ message: 'User and related data deleted' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-router.get('/spotify', (req, res) => {
-    const { roomId } = req.query;
-    const mobileRedirect = cleanEnv(req.query.mobileRedirect || '');
-    const redirectUriParam = cleanEnv(req.query.redirectUri || '');
-    const scope = 'user-modify-playback-state user-read-playback-state';
-    const clientId = cleanEnv(process.env.SPOTIFY_CLIENT_ID);
-    const redirectUri = cleanEnv(redirectUriParam || process.env.SPOTIFY_REDIRECT_URI);
-
-    if (!clientId || !redirectUri) {
-        return res.status(500).json({ message: 'Missing Spotify client configuration on server' });
+    if (!firstname || !lastname || !email || !password || !phone || !birthday) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
-    const oauthState = JSON.stringify({
-        roomId: String(roomId || ''),
-        mobileRedirect,
-        redirectUri,
+    const userExists = await isUserExists(email);
+    if (userExists) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
+    const newUser = await registerNewUser(
+      email,
+      password,
+      firstname,
+      lastname,
+      phone,
+      birthday,
+    );
+    const user = newUser.user;
+
+    res.status(201).json({
+      id: user.id,
+      email: user.email,
+      firstname: firstname,
+      lastname: lastname,
+      token: generateToken(user.id),
     });
-
-    console.log('[Spotify OAuth] start', {
-        roomId: String(roomId || ''),
-        redirectUri,
-        mobileRedirect,
-    });
-
-    const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: clientId,
-        scope,
-        redirect_uri: redirectUri,
-        state: oauthState,
-    });
-    res.redirect(`https://accounts.spotify.com/authorize?${params.toString()}`);
+  } catch (error) {
+    console.error("Register Router Error:", error.message);
+    res.status(500).json({ message: error.message });
+  }
 });
 
-router.get('/spotify/callback', async (req, res) => {
-    const { code, state } = req.query;
-
-    console.log('[Spotify OAuth] callback received', {
-        hasCode: Boolean(code),
-        stateLength: String(state || '').length,
-    });
-
-    try {
-        let roomId = '';
-        let mobileRedirect = '';
-        let redirectUri = cleanEnv(process.env.SPOTIFY_REDIRECT_URI);
-        try {
-            const parsedState = JSON.parse(String(state || '{}'));
-            roomId = String(parsedState.roomId || '');
-            mobileRedirect = cleanEnv(parsedState.mobileRedirect || '');
-            redirectUri = cleanEnv(parsedState.redirectUri || redirectUri);
-        } catch {
-            roomId = String(state || '');
-        }
-
-        const tokenData = await getHostToken(code, redirectUri);
-        
-        if (roomId) {
-            saveTokenForRoom(roomId, tokenData);
-        }
-        
-        const appRedirectBase = mobileRedirect || 'fliq://spotify-callback';
-        const separator = appRedirectBase.includes('?') ? '&' : '?';
-const appRedirect = `${appRedirectBase}${separator}code=${code}&success=true&roomId=${encodeURIComponent(roomId)}`;        
-        console.log('[Spotify OAuth] redirecting to app', { appRedirectBase, roomId });
-        res.redirect(appRedirect);
-    } catch (err) {
-        console.error('Spotify callback error:', err);
-        res.status(500).send('Spotify auth failed');
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: "Missing email or password" });
     }
+
+    const data = await login(email, password);
+    if (!data)
+      return res.status(401).json({ message: "Invalid email or password" });
+
+    const user = data.user;
+
+    // ← Fetch full profile from users table
+    const profile = await getUserById(user.id);
+
+    res.status(200).json({
+      id: user.id,
+      firstname: profile.first_name,
+      lastname: profile.last_name,
+      email: profile.email,
+      phone: profile.phone,
+      token: generateToken(user.id),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/user/:id", async (req, res) => {
+  try {
+    const { data: user, error } = getUserById(req.params.id);
+
+    if (error || !user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.patch("/user/:id", async (req, res) => {
+  try {
+    const updates = req.body;
+
+    delete updates.id;
+    delete updates._id;
+
+    const { data: updatedUser, error } = updateUser(updates);
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/user/:id", async (req, res) => {
+  try {
+    deleteUser(req.params.id);
+    res.status(200).json({ message: "User and related data deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/spotify", (req, res) => {
+  const { roomId } = req.query;
+  const mobileRedirect = cleanEnv(req.query.mobileRedirect || "");
+  const redirectUriParam = cleanEnv(req.query.redirectUri || "");
+  const scope = "user-modify-playback-state user-read-playback-state";
+  const clientId = cleanEnv(process.env.SPOTIFY_CLIENT_ID);
+  const redirectUri = cleanEnv(
+    redirectUriParam || process.env.SPOTIFY_REDIRECT_URI,
+  );
+
+  if (!clientId || !redirectUri) {
+    return res
+      .status(500)
+      .json({ message: "Missing Spotify client configuration on server" });
+  }
+
+  const oauthState = JSON.stringify({
+    roomId: String(roomId || ""),
+    mobileRedirect,
+    redirectUri,
+  });
+
+  console.log("[Spotify OAuth] start", {
+    roomId: String(roomId || ""),
+    redirectUri,
+    mobileRedirect,
+  });
+
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: clientId,
+    scope,
+    redirect_uri: redirectUri,
+    state: oauthState,
+  });
+  res.redirect(`https://accounts.spotify.com/authorize?${params.toString()}`);
+});
+
+router.get("/spotify/callback", async (req, res) => {
+  const { code, state } = req.query;
+
+  console.log("[Spotify OAuth] callback received", {
+    hasCode: Boolean(code),
+    stateLength: String(state || "").length,
+  });
+
+  try {
+    let roomId = "";
+    let mobileRedirect = "";
+    let redirectUri = cleanEnv(process.env.SPOTIFY_REDIRECT_URI);
+    try {
+      const parsedState = JSON.parse(String(state || "{}"));
+      roomId = String(parsedState.roomId || "");
+      mobileRedirect = cleanEnv(parsedState.mobileRedirect || "");
+      redirectUri = cleanEnv(parsedState.redirectUri || redirectUri);
+    } catch {
+      roomId = String(state || "");
+    }
+
+    const tokenData = await getHostToken(code, redirectUri);
+
+    if (roomId) {
+      saveTokenForRoom(roomId, tokenData);
+    }
+
+    const appRedirectBase = mobileRedirect || "fliq://spotify-callback";
+    const separator = appRedirectBase.includes("?") ? "&" : "?";
+    const appRedirect = `${appRedirectBase}${separator}code=${code}&success=true&roomId=${encodeURIComponent(roomId)}`;
+    console.log("[Spotify OAuth] redirecting to app", {
+      appRedirectBase,
+      roomId,
+    });
+    res.redirect(appRedirect);
+  } catch (err) {
+    console.error("Spotify callback error:", err);
+    res.status(500).send("Spotify auth failed");
+  }
 });
 
 export default router;
