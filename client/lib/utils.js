@@ -67,3 +67,33 @@ export const generateCode = (length = 6) => {
     () => chars[Math.floor(Math.random() * chars.length)],
   ).join("");
 };
+
+export const getBase64Image = (imageFile) => {
+  return new Promise((resolve, reject) => {
+    if (!imageFile) {
+      reject(new Error("No file provided"));
+      return;
+    }
+
+    if (imageFile.type !== "image/jpeg") {
+      reject(new Error("Image must be a JPEG format"));
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const fullBase64 = reader.result;
+
+      const cleanBase64 = fullBase64.split(",")[1];
+
+      resolve(cleanBase64);
+    };
+
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    reader.readAsDataURL(imageFile);
+  });
+};

@@ -136,7 +136,8 @@ router.get("/spotify", (req, res) => {
   const { roomId } = req.query;
   const mobileRedirect = cleanEnv(req.query.mobileRedirect || "");
   const redirectUriParam = cleanEnv(req.query.redirectUri || "");
-  const scope = "user-modify-playback-state user-read-playback-state";
+  const scope =
+    "user-modify-playback-state user-read-playback-state playlist-modify-public playlist-modify-private ugc-image-upload";
   const clientId = cleanEnv(process.env.SPOTIFY_CLIENT_ID);
   const redirectUri = cleanEnv(
     redirectUriParam || process.env.SPOTIFY_REDIRECT_URI,
