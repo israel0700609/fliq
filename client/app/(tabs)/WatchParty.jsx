@@ -17,7 +17,6 @@ import {
   Animated,
   ScrollView,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
@@ -26,6 +25,9 @@ import { getColors } from "../../constants/theme";
 import { getSocket } from "../../lib/socket.js";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
+import i18n from "../../languages/i18n.js";
+import { I18n } from "i18n-js";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
 
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 const socket = getSocket(SERVER_URL);
@@ -64,7 +66,7 @@ function VotePopup({ vote, onVote, mySocketId, c, styles }) {
             <Ionicons name="musical-note" size={13} color={c.primary} />
             <Text style={styles.voteProposerText}>
               <Text style={styles.voteProposerName}>{vote.proposedBy}</Text>{" "}
-              wants to add a song
+              {i18n.t("wantsToAdd")}
             </Text>
           </View>
           <View style={styles.voteTimerPill}>
@@ -118,7 +120,7 @@ function VotePopup({ vote, onVote, mySocketId, c, styles }) {
                 { color: hasVotedNo ? "#fff" : c.error },
               ]}
             >
-              Nope
+              {i18n.t("nope")}
             </Text>
           </Pressable>
           <Pressable
@@ -140,7 +142,7 @@ function VotePopup({ vote, onVote, mySocketId, c, styles }) {
                 { color: hasVotedYes ? "#fff" : c.success },
               ]}
             >
-              Add it
+              {i18n.t("addIt")}
             </Text>
           </Pressable>
         </View>
@@ -187,7 +189,6 @@ function VoteResultToast({ result, onDismiss, c, styles }) {
   );
 }
 
-// ── Spotify connect sheet ─────────────────────────────────────────────────────
 function SpotifyConnectSheet({
   visible,
   onClose,
@@ -201,7 +202,7 @@ function SpotifyConnectSheet({
     setIsConnecting(true);
     try {
       if (!SERVER_URL) {
-        Alert.alert("Spotify", "Missing EXPO_PUBLIC_SERVER_URL");
+        Alert.alert(i18n.t("spotify"), i18n.t("missingServerUrl"));
         return;
       }
       const baseUrl = SERVER_URL.replace(/\/$/, "");
@@ -217,21 +218,18 @@ function SpotifyConnectSheet({
           socket.emit("spotify_connected_alert", { roomId });
           onConnected();
           onClose();
-          Alert.alert("Spotify", "Connected successfully");
+          Alert.alert(i18n.t("spotify"), i18n.t("connectedSuccessfully"));
           return;
         }
-        Alert.alert(
-          "Spotify",
-          "Auth returned without success. Please try again.",
-        );
+        Alert.alert(i18n.t("spotify"), i18n.t("authWithoutSuccess"));
         return;
       }
-      Alert.alert("Spotify", `Auth did not complete (${result.type}).`);
-    } catch {
       Alert.alert(
-        "Spotify",
-        "Connection failed. Check server URL and try again.",
+        i18n.t("spotify"),
+        `${i18n.t("authDidNotComplete")} (${result.type}).`,
       );
+    } catch {
+      Alert.alert(i18n.t("spotify"), i18n.t("connectionFailed"));
     } finally {
       setIsConnecting(false);
     }
@@ -249,21 +247,18 @@ function SpotifyConnectSheet({
         <View style={styles.sheetHandle} />
         <View style={styles.spotifyLogoRow}>
           <View style={styles.spotifyIconWrap}>
-            <Ionicons name="musical-notes" size={28} color="#1DB954" />
+            <FontAwesome name="spotify" size={28} color="#1DB954" />
           </View>
         </View>
-        <Text style={styles.sheetTitle}>Connect Spotify</Text>
-        <Text style={styles.sheetSubtitle}>
-          Sign in so your party can play music. Your account controls playback
-          for everyone in the room.
-        </Text>
+        <Text style={styles.sheetTitle}>{i18n.t("connectSpotify")}</Text>
+        <Text style={styles.sheetSubtitle}>{i18n.t("spotifyDesc")}</Text>
         <View style={styles.featureList}>
           {[
-            { icon: "search-outline", label: "Search any song on Spotify" },
-            { icon: "people-outline", label: "Room votes on every song" },
+            { icon: "search-outline", label: i18n.t("searchAnySong") },
+            { icon: "people-outline", label: i18n.t("roomVotes") },
             {
               icon: "play-circle-outline",
-              label: "Control playback for the room",
+              label: i18n.t("controlPlayback"),
             },
           ].map((f) => (
             <View key={f.label} style={styles.featureRow}>
@@ -283,20 +278,20 @@ function SpotifyConnectSheet({
             <ActivityIndicator color="#000" size="small" />
           ) : (
             <>
-              <Ionicons
-                name="logo-spotify"
+              <FontAwesome
+                name="spotify"
                 size={18}
                 color="#000"
                 style={{ marginRight: 8 }}
               />
               <Text style={styles.spotifyButtonText}>
-                Continue with Spotify
+                {i18n.t("ContinuewithSpotify")}
               </Text>
             </>
           )}
         </TouchableOpacity>
         <Pressable onPress={onClose} style={styles.skipButton}>
-          <Text style={styles.skipText}>Skip for now</Text>
+          <Text style={styles.skipText}>{i18n.t("skipForNow")}</Text>
         </Pressable>
       </View>
     </Modal>
@@ -366,8 +361,10 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
             <View>
-              <Text style={styles.sheetTitle}>Propose a song</Text>
-              <Text style={styles.sheetSubtitle}>the room votes to add it</Text>
+              <Text style={styles.sheetTitle}>{i18n.t("proposeSong")}</Text>
+              <Text style={styles.sheetSubtitle}>
+                {i18n.t("roomVotesToAdd")}
+              </Text>
             </View>
             <Pressable onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={18} color={c.textMuted} />
@@ -382,7 +379,7 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Song, artist or album..."
+              placeholder={i18n.t("songArtistAlbum")}
               placeholderTextColor={c.textMuted}
               value={query}
               onChangeText={handleSearch}
@@ -406,7 +403,9 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
             </View>
           ) : results.length === 0 && query.length > 0 ? (
             <View style={styles.centeredState}>
-              <Text style={styles.emptyText}>No results for "{query}"</Text>
+              <Text style={styles.emptyText}>
+                {i18n.t("noResultsFor")} "{query}"
+              </Text>
             </View>
           ) : results.length === 0 ? (
             <View style={styles.centeredState}>
@@ -415,7 +414,9 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
                 size={32}
                 color={c.border}
               />
-              <Text style={styles.emptyText}>Start typing to search</Text>
+              <Text style={styles.emptyText}>
+                {i18n.t("startTypingSearch")}
+              </Text>
             </View>
           ) : (
             <FlatList
@@ -501,6 +502,8 @@ export default function WatchParty() {
   const voteTimers = useRef({});
 
   useEffect(() => {
+    if (!roomId) return;
+    setSpotifyConnected(false);
     socket.emit("join_room", roomId);
 
     socket.on("member_count", setMemberCount);
@@ -574,16 +577,13 @@ export default function WatchParty() {
 
   const handleCreatePlaylist = async () => {
     if (queue.length === 0) {
-      Alert.alert("Oops", "The queue is empty. Propose some songs first!");
+      Alert.alert(i18n.t("oops"), i18n.t("queueEmpty"));
       return;
     }
 
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(
-        "Permission needed",
-        "We need camera permissions to take a cover photo.",
-      );
+      Alert.alert(i18n.t("permissionNeeded"), i18n.t("cameraPermission"));
       return;
     }
 
@@ -595,7 +595,7 @@ export default function WatchParty() {
     });
 
     if (!result.canceled) {
-      Alert.alert("Creating Playlist...", "Your playlist is being created!");
+      Alert.alert(i18n.t("creatingPlaylist"), i18n.t("playlistBeingCreated"));
 
       const manipResult = await ImageManipulator.manipulateAsync(
         result.assets[0].uri,
@@ -642,14 +642,12 @@ export default function WatchParty() {
 
       <View style={styles.roomBadge}>
         <Text style={styles.roomBadgeLabel}>
-          {isHost ? "you created" : "you joined"}
+          {isHost ? i18n.t("created") : i18n.t("joined")}
         </Text>
       </View>
-      <Text style={styles.roomTitle}>Watch party</Text>
+      <Text style={styles.roomTitle}>{i18n.t("watchTogether")}</Text>
       <Text style={styles.roomSubtitle}>
-        {isHost
-          ? "Share the code with your friends"
-          : "Waiting for the host to start..."}
+        {isHost ? i18n.t("share") : i18n.t("waiting")}
       </Text>
 
       {isHost && !spotifySheetVisible && (
@@ -658,12 +656,10 @@ export default function WatchParty() {
             styles.spotifyBanner,
             spotifyConnected && styles.spotifyBannerConnected,
           ]}
-          onPress={() => !spotifyConnected && setSpotifySheetVisible(true)}
+          onPress={() => setSpotifySheetVisible(true)}
         >
-          <Ionicons
-            name={
-              spotifyConnected ? "checkmark-circle" : "musical-notes-outline"
-            }
+          <FontAwesome
+            name="spotify"
             size={15}
             color={spotifyConnected ? "#1DB954" : c.textMuted}
           />
@@ -673,9 +669,7 @@ export default function WatchParty() {
               spotifyConnected && { color: "#1DB954" },
             ]}
           >
-            {spotifyConnected
-              ? "Spotify connected"
-              : "Connect Spotify for playback"}
+            {spotifyConnected ? i18n.t("spotifyConnected") : i18n.t("spotify")}
           </Text>
           {!spotifyConnected && (
             <Ionicons
@@ -689,7 +683,7 @@ export default function WatchParty() {
       )}
 
       <Pressable style={styles.codeBlock} onPress={handleCopyCode}>
-        <Text style={styles.codeLabel}>room code</Text>
+        <Text style={styles.codeLabel}>{i18n.t("roomcode")}</Text>
         <Text style={styles.codeText}>{roomId}</Text>
         <View style={styles.codeCopyHint}>
           <Ionicons
@@ -698,7 +692,7 @@ export default function WatchParty() {
             color={copied ? c.success : c.textMuted}
           />
           <Text style={[styles.codeCopyText, copied && { color: c.success }]}>
-            {copied ? "copied" : "tap to copy"}
+            {copied ? i18n.t("copied") : i18n.t("copy")}
           </Text>
         </View>
       </Pressable>
@@ -712,7 +706,7 @@ export default function WatchParty() {
             style={{ marginRight: 6 }}
           />
           <Text style={styles.leaveButtonText}>
-            {isHost ? "Close room" : "Leave room"}
+            {isHost ? i18n.t("closeroom") : i18n.t("leaveroom")}
           </Text>
         </TouchableOpacity>
       )}
@@ -723,20 +717,20 @@ export default function WatchParty() {
     <View style={[styles.rightCol, isLandscape && styles.rightColLandscape]}>
       <View style={styles.queueSection}>
         <View style={styles.queueHeader}>
-          <Text style={styles.sectionLabel}>queue</Text>
+          <Text style={styles.sectionLabel}>{i18n.t("queue")}</Text>
           <Pressable
             style={styles.addSongButton}
             onPress={() => setSearchVisible(true)}
           >
             <Ionicons name="add" size={15} color={c.background} />
-            <Text style={styles.addSongText}>Propose song</Text>
+            <Text style={styles.addSongText}>{i18n.t("proposeSong")}</Text>
           </Pressable>
         </View>
         {queue.length === 0 ? (
           <View style={styles.queueEmpty}>
             <Ionicons name="musical-notes-outline" size={26} color={c.border} />
             <Text style={styles.queueEmptyText}>
-              Propose a song — the room votes!
+              {i18n.t("proposesongvote")}
             </Text>
           </View>
         ) : (
@@ -787,7 +781,7 @@ export default function WatchParty() {
               style={{ marginRight: 8 }}
             />
             <Text style={{ fontSize: 15, fontWeight: "700", color: "#000" }}>
-              Save Playlist to Spotify
+              {i18n.t("saveplaylist")}
             </Text>
           </TouchableOpacity>
         )}

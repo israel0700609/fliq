@@ -1,3 +1,4 @@
+import i18n from "../../languages/i18n";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
@@ -48,7 +49,7 @@ export default function JoinRoom() {
   const handleJoinParty = () => {
     if (!socket) return;
     if (!socket.connected) {
-      Alert.alert("Connection error", "Still connecting. Please try again.");
+      Alert.alert(i18n.t("connectionError"), i18n.t("stillConnecting"));
       return;
     }
     SocketJoinParty(roomCode, socket, user);
@@ -76,45 +77,41 @@ export default function JoinRoom() {
     >
       {!isLandscape && Brand}
 
-      <Text style={styles.pageTitle}>Watch together</Text>
-      <Text style={styles.pageSubtitle}>
-        host a room or join a friend's party
-      </Text>
+      <Text style={styles.pageTitle}>{i18n.t("watchTogether")}</Text>
+      <Text style={styles.pageSubtitle}>{i18n.t("hostOrJoin")}</Text>
 
       {/* Create */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>host a party</Text>
+        <Text style={styles.sectionLabel}>{i18n.t("hostAParty")}</Text>
         <View style={styles.card}>
           <View style={styles.cardIcon}>
             <Ionicons name="tv-outline" size={20} color={c.primary} />
           </View>
           <View style={styles.cardBody}>
-            <Text style={styles.cardTitle}>Create a room</Text>
-            <Text style={styles.cardDesc}>
-              Generate a code and invite your friends to swipe movies together
-            </Text>
+            <Text style={styles.cardTitle}>{i18n.t("createARoom")}</Text>
+            <Text style={styles.cardDesc}>{i18n.t("createDesc")}</Text>
           </View>
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={handleCreateParty}
           >
-            <Text style={styles.primaryButtonText}>Create →</Text>
+            <Text style={styles.primaryButtonText}>{i18n.t("createBtn")}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.dividerRow}>
         <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>or</Text>
+        <Text style={styles.dividerText}>{i18n.t("or")}</Text>
         <View style={styles.dividerLine} />
       </View>
 
       {/* Join */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>join a party</Text>
+        <Text style={styles.sectionLabel}>{i18n.t("joinAParty")}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter room code"
+          placeholder={i18n.t("enterRoomCode")}
           placeholderTextColor={c.textMuted}
           value={roomCode}
           onChangeText={(v) => setRoomCode(v.toUpperCase())}
@@ -131,7 +128,7 @@ export default function JoinRoom() {
           onPress={handleJoinParty}
           disabled={roomCode.trim().length === 0}
         >
-          <Text style={styles.joinButtonText}>Join room</Text>
+          <Text style={styles.joinButtonText}>{i18n.t("joinRoomBtn")}</Text>
           <Ionicons
             name="arrow-forward"
             size={16}

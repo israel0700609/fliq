@@ -1,3 +1,4 @@
+import i18n from "../../languages/i18n";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
@@ -95,7 +96,7 @@ export default function AccountPage() {
           value={values[name]}
           onChangeText={(v) => updateField(name, v)}
           editable={!isDisabled}
-          placeholder={`Enter your ${label.toLowerCase()}`}
+          placeholder={i18n.t("enterYourField", { field: label.toLowerCase() })}
           placeholderTextColor={c.textMuted}
           keyboardType={keyboardType}
           autoCapitalize="none"
@@ -126,9 +127,9 @@ export default function AccountPage() {
       </View>
       {isLandscape && (
         <>
-          <Text style={styles.pageTitle}>My account</Text>
+          <Text style={styles.pageTitle}>{i18n.t("myAccount")}</Text>
           <Text style={styles.pageSubtitle}>
-            {isEditing ? "editing your profile" : "your profile info"}
+            {isEditing ? i18n.t("editingProfile") : i18n.t("yourProfileInfo")}
           </Text>
         </>
       )}
@@ -140,9 +141,9 @@ export default function AccountPage() {
       {!isLandscape && (
         <View style={styles.pageHeader}>
           <View>
-            <Text style={styles.pageTitle}>My account</Text>
+            <Text style={styles.pageTitle}>{i18n.t("myAccount")}</Text>
             <Text style={styles.pageSubtitle}>
-              {isEditing ? "editing your profile" : "your profile info"}
+              {isEditing ? i18n.t("editingProfile") : i18n.t("yourProfileInfo")}
             </Text>
           </View>
           <Pressable
@@ -160,7 +161,7 @@ export default function AccountPage() {
                 isEditing && { color: c.textMuted },
               ]}
             >
-              {isEditing ? "Cancel" : "Edit"}
+              {isEditing ? i18n.t("cancel") : i18n.t("edit")}
             </Text>
           </Pressable>
         </View>
@@ -182,13 +183,13 @@ export default function AccountPage() {
           <Text
             style={[styles.editButtonText, isEditing && { color: c.textMuted }]}
           >
-            {isEditing ? "Cancel" : "Edit"}
+            {isEditing ? i18n.t("cancel") : i18n.t("edit")}
           </Text>
         </Pressable>
       )}
 
       <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Email</Text>
+        <Text style={styles.inputLabel}>{i18n.t("email")}</Text>
         <TextInput
           style={[styles.input, styles.inputDisabled]}
           value={user?.email || ""}
@@ -198,9 +199,9 @@ export default function AccountPage() {
         <View style={{ height: 16 }} />
       </View>
 
-      {renderField("First name", "firstname")}
-      {renderField("Last name", "lastname")}
-      {renderField("Phone", "phone", "phone-pad")}
+      {renderField(i18n.t("firstName"), "firstname")}
+      {renderField(i18n.t("lastName"), "lastname")}
+      {renderField(i18n.t("phone"), "phone", "phone-pad")}
 
       {errors._server && (
         <Text style={styles.serverError}>{errors._server}</Text>
@@ -218,7 +219,7 @@ export default function AccountPage() {
           {isPending ? (
             <ActivityIndicator color={c.background} size="small" />
           ) : (
-            <Text style={styles.saveButtonText}>Save changes</Text>
+            <Text style={styles.saveButtonText}>{i18n.t("saveChanges")}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -232,7 +233,7 @@ export default function AccountPage() {
           color={c.error}
           style={{ marginRight: 6 }}
         />
-        <Text style={styles.logoutText}>Log out</Text>
+        <Text style={styles.logoutText}>{i18n.t("logout")}</Text>
       </TouchableOpacity>
     </View>
   );

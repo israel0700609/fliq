@@ -1,3 +1,5 @@
+import i18n from "../languages/i18n";
+
 const REGEX = {
   EMAIL: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
   PHONE: /^[0-9]{10}$/,
@@ -17,18 +19,16 @@ export const validate = (name, value) => {
   if (!value) return "";
   switch (name) {
     case "email":
-      return REGEX.EMAIL.test(value) ? "" : "Invalid email address";
+      return REGEX.EMAIL.test(value) ? "" : i18n.t("invalidEmail");
     case "phone":
-      return REGEX.PHONE.test(value) ? "" : "Phone must be 10 digits";
+      return REGEX.PHONE.test(value) ? "" : i18n.t("invalidPhone");
     case "lastname":
     case "lastName":
-      return REGEX.NAME.test(value)
-        ? ""
-        : "Last name can only contain letters and numbers";
+      return REGEX.NAME.test(value) ? "" : i18n.t("invalidLastName");
     case "firstname":
-      return value.trim().length >= 2
-        ? ""
-        : "First name must be at least 2 characters";
+      return value.trim().length >= 2 ? "" : i18n.t("invalidFirstName");
+    case "password":
+      return value.length >= 8 ? "" : i18n.t("invalidPassword");
     default:
       return "";
   }

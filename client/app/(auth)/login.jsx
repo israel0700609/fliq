@@ -1,3 +1,4 @@
+import i18n from "../../languages/i18n";
 import React, { useMemo, useState } from "react";
 import {
   View,
@@ -44,7 +45,7 @@ export default function LoginScreen() {
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>{label}</Text>
         <TextInput
-          placeholder={`Enter your ${label.toLowerCase()}`}
+          placeholder={i18n.t("enterYourField", { field: label.toLowerCase() })}
           placeholderTextColor={c.textMuted}
           secureTextEntry={secure}
           autoCapitalize="none"
@@ -91,7 +92,9 @@ export default function LoginScreen() {
             </View>
             <View style={styles.brandContent}>
               <Text style={styles.appName}>FLIQ</Text>
-              <Text style={styles.tagline}>movies · people · moments</Text>
+              <Text style={styles.tagline}>
+                {i18n.t("moviesPeopleMoments")}
+              </Text>
             </View>
             <View style={styles.filmStrip}>
               {[...Array(6)].map((_, i) => (
@@ -102,15 +105,17 @@ export default function LoginScreen() {
 
           {/* Form */}
           <View style={[styles.form, isLandscape && styles.formLandscape]}>
-            <Text style={styles.formTitle}>Welcome back</Text>
-            {renderInput("Email", "email")}
-            {renderInput("Password", "password", showPassword)}
+            <Text style={styles.formTitle}>{i18n.t("welcomeBack")}</Text>
+            {renderInput(i18n.t("email"), "email")}
+            {renderInput(i18n.t("password"), "password", showPassword)}
             <Pressable
               onPress={() => setShowPassword((p) => !p)}
               style={styles.toggleContainer}
             >
               <Text style={styles.toggleText}>
-                {showPassword ? "+ show password" : "− hide password"}
+                {showPassword
+                  ? `+ ${i18n.t("showPassword")}`
+                  : `− ${i18n.t("hidePassword")}`}
               </Text>
             </Pressable>
             <Pressable
@@ -129,7 +134,7 @@ export default function LoginScreen() {
                   }
                   router.replace("/(tabs)/JoinRoom");
                 } catch {
-                  alert("Something went wrong.");
+                  alert(i18n.t("somethingWentWrong"));
                 } finally {
                   setIsPending(false);
                 }
@@ -138,7 +143,7 @@ export default function LoginScreen() {
               {isPending ? (
                 <ActivityIndicator color={c.background} />
               ) : (
-                <Text style={styles.buttonText}>Let me in</Text>
+                <Text style={styles.buttonText}>{i18n.t("letMeIn")}</Text>
               )}
             </Pressable>
             <Pressable
@@ -146,8 +151,11 @@ export default function LoginScreen() {
               style={styles.linkContainer}
             >
               <Text style={styles.linkText}>
-                New here?{"  "}
-                <Text style={styles.linkHighlight}>Create account →</Text>
+                {i18n.t("newHere")}
+                {"  "}
+                <Text style={styles.linkHighlight}>
+                  {i18n.t("createAccount")}
+                </Text>
               </Text>
             </Pressable>
           </View>

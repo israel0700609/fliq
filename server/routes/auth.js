@@ -20,7 +20,7 @@ const cleanEnv = (value = "") =>
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "2m",
+    expiresIn: "20m",
   });
 };
 

@@ -1,3 +1,4 @@
+import i18n from "../../languages/i18n";
 import React, { useMemo, useState } from "react";
 import {
   View,
@@ -53,10 +54,12 @@ export default function RegisterScreen() {
       <View style={styles.inputWrapper}>
         <View style={styles.labelRow}>
           <Text style={styles.inputLabel}>{label}</Text>
-          {optional && <Text style={styles.optionalTag}>optional</Text>}
+          {optional && (
+            <Text style={styles.optionalTag}>{i18n.t("optional")}</Text>
+          )}
         </View>
         <TextInput
-          placeholder={`Enter your ${label.toLowerCase()}`}
+          placeholder={i18n.t("enterYourField", { field: label.toLowerCase() })}
           placeholderTextColor={c.textMuted}
           secureTextEntry={secure}
           autoCapitalize="none"
@@ -84,36 +87,40 @@ export default function RegisterScreen() {
     <View style={[styles.header, isLandscape && styles.headerLandscape]}>
       <Text style={styles.appName}>FLIQ</Text>
       <View style={styles.dividerLine} />
-      <Text style={styles.subtitle}>Create your account</Text>
+      <Text style={styles.subtitle}>{i18n.t("createYourAccount")}</Text>
     </View>
   );
 
   const Form = (
     <View style={[styles.form, isLandscape && styles.formLandscape]}>
-      <Text style={styles.stepLabel}>who are you?</Text>
+      <Text style={styles.stepLabel}>{i18n.t("whoAreYou")}</Text>
 
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
-          {renderInput("First name", "firstname")}
+          {renderInput(i18n.t("firstName"), "firstname")}
         </View>
-        <View style={{ flex: 1 }}>{renderInput("Last name", "lastname")}</View>
+        <View style={{ flex: 1 }}>
+          {renderInput(i18n.t("lastName"), "lastname")}
+        </View>
       </View>
 
-      {renderInput("Email", "email", false, true)}
-      {renderInput("Phone", "phone", false, true)}
-      {renderInput("Password", "password", showPassword)}
+      {renderInput(i18n.t("email"), "email")}
+      {renderInput(i18n.t("phone"), "phone", false, true)}
+      {renderInput(i18n.t("password"), "password", showPassword)}
 
       <Pressable
         onPress={() => setShowPassword((p) => !p)}
         style={styles.toggleContainer}
       >
         <Text style={styles.toggleText}>
-          {showPassword ? "+ show password" : "− hide password"}
+          {showPassword
+            ? `+ ${i18n.t("showPassword")}`
+            : `− ${i18n.t("hidePassword")}`}
         </Text>
       </Pressable>
 
       <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Date of birth</Text>
+        <Text style={styles.inputLabel}>{i18n.t("dob")}</Text>
         <Pressable
           style={[styles.input, { justifyContent: "center" }]}
           onPress={() => setShowDate(true)}
@@ -121,13 +128,13 @@ export default function RegisterScreen() {
           <Text
             style={{ color: birthday ? c.text : c.textMuted, fontSize: 15 }}
           >
-            {birthday ? birthday.toLocaleDateString() : "Select your birthday"}
+            {birthday
+              ? birthday.toLocaleDateString()
+              : i18n.t("selectBirthday")}
           </Text>
         </Pressable>
         {birthday && calculateAge(birthday) < 21 ? (
-          <Text style={styles.errorText}>
-            You must be at least 21 years old
-          </Text>
+          <Text style={styles.errorText}>{i18n.t("invalidDate")}</Text>
         ) : (
           <View style={{ height: 16 }} />
         )}
@@ -161,7 +168,7 @@ export default function RegisterScreen() {
             );
             if (!result.success) alert(result.message);
           } catch {
-            alert("Something went wrong.");
+            alert(i18n.t("somethingWentWrong"));
           } finally {
             setIsPending(false);
           }
@@ -170,7 +177,7 @@ export default function RegisterScreen() {
         {isPending ? (
           <ActivityIndicator color={c.background} />
         ) : (
-          <Text style={styles.buttonText}>Join Fliq</Text>
+          <Text style={styles.buttonText}>{i18n.t("joinFliq")}</Text>
         )}
       </Pressable>
 
@@ -179,8 +186,9 @@ export default function RegisterScreen() {
         style={styles.linkContainer}
       >
         <Text style={styles.linkText}>
-          Already have an account?{"  "}
-          <Text style={styles.linkHighlight}>Sign in →</Text>
+          {i18n.t("alreadyHaveAccount")}
+          {"  "}
+          <Text style={styles.linkHighlight}>{i18n.t("signIn")}</Text>
         </Text>
       </Pressable>
     </View>

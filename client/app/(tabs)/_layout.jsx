@@ -1,13 +1,18 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { View, StyleSheet } from 'react-native';
-import Colors from '../../constants/Colors';
-import { useApp } from '../../hooks/AppContext';
+import i18n from "../../languages/i18n";
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { View, StyleSheet } from "react-native";
+import Colors from "../../constants/Colors";
+import { useApp } from "../../hooks/AppContext";
 
 function TabIcon({ name, color, focused }) {
   return (
     <View style={[styles.iconWrapper, focused && styles.iconWrapperActive]}>
-      <Ionicons name={name} size={22} color={focused ? Colors.primary : color} />
+      <Ionicons
+        name={name}
+        size={22}
+        color={focused ? Colors.primary : color}
+      />
     </View>
   );
 }
@@ -31,37 +36,49 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontWeight: "600",
           letterSpacing: 0.5,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           marginTop: 2,
         },
       }}
     >
       <Tabs.Screen
-        name="VibeInputScreen"
+        name="JoinRoom"
         options={{
-          title: 'Vibe',
+          title: i18n.t("mapTabHome"),
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'sparkles' : 'sparkles-outline'} color={color} focused={focused} />
+            <TabIcon
+              name={focused ? "home" : "home-outline"}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
       <Tabs.Screen
-        name="MovieSwipeScreen"
+        name="WatchParty"
         options={{
-          title: 'Swipe',
+          title: i18n.t("mapTabParty"),
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'film' : 'film-outline'} color={color} focused={focused} />
+            <TabIcon
+              name={focused ? "musical-notes" : "musical-notes-outline"}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
       <Tabs.Screen
-        name="FavoritesScreen"
+        name="AccountPage"
         options={{
-          title: 'Saved',
+          title: i18n.t("mapTabAccount"),
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'heart' : 'heart-outline'} color={color} focused={focused} />
+            <TabIcon
+              name={focused ? "person" : "person-outline"}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -73,8 +90,8 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 36,
     height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 6,
   },
   iconWrapperActive: {
