@@ -1,4 +1,11 @@
-import { addToQueue, searchTracks } from "../spotify_api/spotify_api.js";
+import {
+  addToQueue,
+  searchTracks,
+  createPlayList,
+  addTracksToPlayList,
+  setImageForPlayList,
+  roomTokens,
+} from "../spotify_api/spotify_api.js";
 import { generateCode } from "../utils/utils.js";
 import { rooms } from "../RoomState.js";
 
@@ -292,6 +299,35 @@ export default function handleSocket(socket, io) {
     io.to(roomId).emit("spotify_connected");
   });
 
+  socket.on("createPlayList", async ({ roomId, tracks, image }) => {
+    try {
+      const isCreated = await createPlayList(roomId);
+
+      if (!isCreated) {
+        socket.emit("error_msg", "Failed to create playlist.");
+        return;
+      }
+
+      // 2. מוסיפים את השירים
+      if (tracks && tracks.length > 0) {
+        await addTracksToPlayList(roomId, tracks);
+      }
+
+      if (image) {
+        await setImageForPlayList(roomId, image);
+      }
+
+      const playlistUrl = roomTokens[roomId]?.playlist_url;
+
+      socket.emit("Playlist_created", playlistUrl);
+    } catch (error) {
+      console.error("Error in createPlayList socket event:", error);
+      socket.emit(
+        "error_msg",
+        "Something went wrong while creating the playlist.",
+      );
+    }
+  });
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
     rooms.forEach((room, roomId) => {

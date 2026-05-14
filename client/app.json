@@ -57,7 +57,8 @@
           "speechRecognitionPermission": "Allow fliq to use speech recognition"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,43 +1,61 @@
-import { StyleSheet } from 'react-native';
-import Colors from './Colors'; // וודא שהנתיב נכון (הם באותה תיקייה)
+import { Dark, Light } from "./Colors";
 
-export const getColors = (isDark) => {
-  if (isDark) {
-    return {
-      background: Colors.background,
-      text: Colors.text,
-      primary: Colors.primary,
-      inputBg: Colors.surface,
-      border: Colors.border,
-      accent: Colors.accent,
-      success: Colors.success,
-      error: Colors.error,
-      textMuted: Colors.textMuted,
-    };
-  }
+// Returns the correct color palette based on isDark
+export const getColors = (isDark) => (isDark ? Dark : Light);
 
-  // A default light theme as a fallback
-  return {
-    background: '#F5F5F7',
-    text: '#1A1A1A',
-    primary: '#6366f1',
-    inputBg: '#FFFFFF',
-    border: '#D1D1D6',
-    accent: '#f43f5e',
-    success: '#10b981',
-    error: '#ef4444',
-    textMuted: '#6b7280',
-  };
-};
+// ── Landscape layout helpers ──────────────────────────────────────────────────
 
-export const getLayoutStyle = (isLandscape, bg) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: bg,
-      flexDirection: isLandscape ? 'row' : 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 16,
-    },
-  }).container;
+/**
+ * Returns container props that split into a two-column layout in landscape.
+ * Use on the outermost scrollable/flex container.
+ */
+export const getContainerStyle = (isLandscape, colors) => ({
+  flex: 1,
+  backgroundColor: colors.background,
+  flexDirection: isLandscape ? "row" : "column",
+  alignItems: isLandscape ? "flex-start" : "stretch",
+});
+
+/**
+ * In landscape, the brand/header column takes up ~38% and stays fixed.
+ * In portrait, it's just a normal top section.
+ */
+export const getBrandColumnStyle = (isLandscape) =>
+  isLandscape
+    ? {
+        width: "38%",
+        paddingHorizontal: 32,
+        paddingTop: 48,
+        paddingBottom: 32,
+        alignItems: "center",
+        justifyContent: "center",
+      }
+    : {
+        width: "100%",
+        alignItems: "center",
+        paddingTop: 40,
+        paddingBottom: 8,
+      };
+
+/**
+ * In landscape, the form/content column takes the remaining 62%.
+ * In portrait, it takes full width.
+ */
+export const getFormColumnStyle = (isLandscape) =>
+  isLandscape
+    ? {
+        flex: 1,
+        paddingHorizontal: 32,
+        paddingVertical: 32,
+        justifyContent: "center",
+      }
+    : {
+        width: "100%",
+        paddingHorizontal: 24,
+        paddingBottom: 32,
+      };
+
+/**
+ * Max width for form content — keeps it readable on wide screens
+ */
+export const FORM_MAX_WIDTH = 420;
