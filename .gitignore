@@ -20,7 +20,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
+expo-env.d.ts
 # ================================
 # Environment Variables (CRITICAL)
 # ================================
