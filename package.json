@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
+  }
+}

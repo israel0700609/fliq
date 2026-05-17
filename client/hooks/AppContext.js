@@ -10,7 +10,6 @@ export function AppProvider({ children }) {
     ScreenOrientation.Orientation.PORTRAIT_UP
   );
 
-  /* 🌗 THEME */
   useEffect(() => {
     const sub = Appearance.addChangeListener(({ colorScheme }) => {
       setTheme(colorScheme);
@@ -18,7 +17,6 @@ export function AppProvider({ children }) {
     return () => sub.remove();
   }, []);
 
-  /* 📱 ORIENTATION */
   useEffect(() => {
     ScreenOrientation.getOrientationAsync().then(setOrientation);
 

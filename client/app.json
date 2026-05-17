@@ -3,15 +3,25 @@
     "name": "fliq",
     "slug": "fliq",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "automatic",
     "icon": "./assets/images/icon.png",
     "scheme": "fliq",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourname.fliq",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app needs access to the microphone to let you describe your movie vibe.",
+        "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to convert your voice into search terms."
+      }
     },
     "android": {
+      "package": "com.yourname.fliq",
+      "permissions": [
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,7 +48,17 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Allow fliq to access the microphone",
+          "speechRecognitionPermission": "Allow fliq to use speech recognition"
+        }
+      ],
+      "expo-web-browser",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,
