@@ -1,3 +1,4 @@
+import i18n from "../../languages/i18n.js";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
@@ -10,24 +11,22 @@ import {
   TextInput,
   FlatList,
   Image,
-  KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Alert,
   Animated,
   ScrollView,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useApp } from "../../hooks/AppContext";
 import { getColors } from "../../constants/theme";
 import { getSocket } from "../../lib/socket.js";
-import * as ImagePicker from "expo-image-picker";
-import * as ImageManipulator from "expo-image-manipulator";
-import i18n from "../../languages/i18n.js";
-import { I18n } from "i18n-js";
-import { Ionicons, FontAwesome } from "@expo/vector-icons";
 
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 const socket = getSocket(SERVER_URL);
@@ -39,16 +38,14 @@ function VotePopup({ vote, onVote, mySocketId, c, styles }) {
   const hasVotedNo = vote?.noVoters?.includes(mySocketId);
 
   useEffect(() => {
-    if (vote) {
+    if (vote)
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
         tension: 80,
         friction: 12,
       }).start();
-    } else {
-      slideAnim.setValue(120);
-    }
+    else slideAnim.setValue(120);
   }, [vote?.trackUri]);
 
   if (!vote) return null;
@@ -189,6 +186,7 @@ function VoteResultToast({ result, onDismiss, c, styles }) {
   );
 }
 
+// ── Spotify connect sheet ─────────────────────────────────────────────────────
 function SpotifyConnectSheet({
   visible,
   onClose,
@@ -241,58 +239,68 @@ function SpotifyConnectSheet({
       animationType="slide"
       transparent
       onRequestClose={onClose}
+      supportedOrientations={[
+        "portrait",
+        "portrait-upside-down",
+        "landscape",
+        "landscape-left",
+        "landscape-right",
+      ]}
     >
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
         <View style={styles.sheetHandle} />
-        <View style={styles.spotifyLogoRow}>
-          <View style={styles.spotifyIconWrap}>
-            <FontAwesome name="spotify" size={28} color="#1DB954" />
-          </View>
-        </View>
-        <Text style={styles.sheetTitle}>{i18n.t("connectSpotify")}</Text>
-        <Text style={styles.sheetSubtitle}>{i18n.t("spotifyDesc")}</Text>
-        <View style={styles.featureList}>
-          {[
-            { icon: "search-outline", label: i18n.t("searchAnySong") },
-            { icon: "people-outline", label: i18n.t("roomVotes") },
-            {
-              icon: "play-circle-outline",
-              label: i18n.t("controlPlayback"),
-            },
-          ].map((f) => (
-            <View key={f.label} style={styles.featureRow}>
-              <View style={styles.featureIconWrap}>
-                <Ionicons name={f.icon} size={15} color={c.primary} />
-              </View>
-              <Text style={styles.featureText}>{f.label}</Text>
-            </View>
-          ))}
-        </View>
-        <TouchableOpacity
-          style={[styles.spotifyButton, isConnecting && { opacity: 0.7 }]}
-          onPress={handleConnect}
-          disabled={isConnecting}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {isConnecting ? (
-            <ActivityIndicator color="#000" size="small" />
-          ) : (
-            <>
-              <FontAwesome
-                name="spotify"
-                size={18}
-                color="#000"
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.spotifyButtonText}>
-                {i18n.t("ContinuewithSpotify")}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-        <Pressable onPress={onClose} style={styles.skipButton}>
-          <Text style={styles.skipText}>{i18n.t("skipForNow")}</Text>
-        </Pressable>
+          <View style={styles.spotifyLogoRow}>
+            <View style={styles.spotifyIconWrap}>
+              <FontAwesome name="spotify" size={28} color="#1DB954" />
+            </View>
+          </View>
+          <Text style={styles.sheetTitle}>{i18n.t("connectSpotify")}</Text>
+          <Text style={styles.sheetSubtitle}>{i18n.t("spotifyDesc")}</Text>
+          <View style={styles.featureList}>
+            {[
+              { icon: "search-outline", label: i18n.t("searchAnySong") },
+              { icon: "people-outline", label: i18n.t("roomVotes") },
+              { icon: "play-circle-outline", label: i18n.t("controlPlayback") },
+            ].map((f) => (
+              <View key={f.label} style={styles.featureRow}>
+                <View style={styles.featureIconWrap}>
+                  <Ionicons name={f.icon} size={15} color={c.primary} />
+                </View>
+                <Text style={styles.featureText}>{f.label}</Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity
+            style={[styles.spotifyButton, isConnecting && { opacity: 0.7 }]}
+            onPress={handleConnect}
+            disabled={isConnecting}
+          >
+            {isConnecting ? (
+              <ActivityIndicator color="#000" size="small" />
+            ) : (
+              <>
+                <FontAwesome
+                  name="spotify"
+                  size={18}
+                  color="#000"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.spotifyButtonText}>
+                  {i18n.t("ContinuewithSpotify")}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <Pressable onPress={onClose} style={styles.skipButton}>
+            <Text style={styles.skipText}>{i18n.t("skipForNow")}</Text>
+          </Pressable>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -351,12 +359,19 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
       animationType="slide"
       transparent
       onRequestClose={handleClose}
+      supportedOrientations={[
+        "portrait",
+        "portrait-upside-down",
+        "landscape",
+        "landscape-left",
+        "landscape-right",
+      ]}
     >
-      <Pressable style={styles.backdrop} onPress={handleClose} />
       <KeyboardAvoidingView
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.sheetWrapper}
       >
+        <Pressable style={styles.backdrop} onPress={handleClose} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
@@ -507,10 +522,7 @@ export default function WatchParty() {
     socket.emit("join_room", roomId);
 
     socket.on("member_count", setMemberCount);
-    socket.on("queue_updated", (newQueue) => {
-      console.log("Queue updated:", newQueue);
-      setQueue(newQueue);
-    });
+    socket.on("queue_updated", setQueue);
     socket.on("room_closed", () => router.replace("/(tabs)/JoinRoom"));
     socket.on("spotify_connected", () => setSpotifyConnected(true));
 
@@ -563,11 +575,8 @@ export default function WatchParty() {
   const handleCastVote = (trackUri, vote) =>
     socket.emit("cast_vote", { trackUri, roomId, vote });
   const handleLeaveRoom = () => {
-    if (isHost) {
-      socket.emit("close_room", roomId);
-    } else {
-      socket.emit("leave_room", roomId);
-    }
+    if (isHost) socket.emit("close_room", roomId);
+    else socket.emit("leave_room", roomId);
     router.replace("/(tabs)/JoinRoom");
   };
   const handleCopyCode = () => {
@@ -580,23 +589,19 @@ export default function WatchParty() {
       Alert.alert(i18n.t("oops"), i18n.t("queueEmpty"));
       return;
     }
-
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(i18n.t("permissionNeeded"), i18n.t("cameraPermission"));
       return;
     }
-
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-
     if (!result.canceled) {
       Alert.alert(i18n.t("creatingPlaylist"), i18n.t("playlistBeingCreated"));
-
       const manipResult = await ImageManipulator.manipulateAsync(
         result.assets[0].uri,
         [{ resize: { width: 500, height: 500 } }],
@@ -606,208 +611,224 @@ export default function WatchParty() {
           base64: true,
         },
       );
-
-      const trackUris = queue.map((track) => track.uri);
-      const base64Image = manipResult.base64;
-
       socket.emit("createPlayList", {
         roomId,
-        tracks: trackUris,
-        image: base64Image,
+        tracks: queue.map((t) => t.uri),
+        image: manipResult.base64,
       });
     }
-  }; // In landscape: left column = code + spotify, right column = queue
-  const LeftCol = (
-    <View style={[styles.leftCol, isLandscape && styles.leftColLandscape]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.brandRow}>
-          <View style={styles.filmStrip}>
-            {[...Array(3)].map((_, i) => (
-              <View key={i} style={styles.filmHole} />
-            ))}
-          </View>
-          <Text style={styles.appName}>FLIQ</Text>
-          <View style={styles.filmStrip}>
-            {[...Array(3)].map((_, i) => (
-              <View key={i} style={styles.filmHole} />
-            ))}
-          </View>
-        </View>
-        <View style={styles.memberPill}>
-          <Ionicons name="people-outline" size={13} color={c.textMuted} />
-          <Text style={styles.memberText}>{memberCount}</Text>
-        </View>
-      </View>
+  };
 
-      <View style={styles.roomBadge}>
-        <Text style={styles.roomBadgeLabel}>
-          {isHost ? i18n.t("created") : i18n.t("joined")}
+  // ── render functions (not JSX vars) so they always have fresh state ──────
+  function renderLeftCol() {
+    return (
+      <View
+        style={isLandscape ? styles.leftColLandscape : styles.leftColPortrait}
+      >
+        <View style={styles.header}>
+          <View style={styles.brandRow}>
+            <View style={styles.filmStrip}>
+              {[...Array(3)].map((_, i) => (
+                <View key={i} style={styles.filmHole} />
+              ))}
+            </View>
+            <Text style={styles.appName}>FLIQ</Text>
+            <View style={styles.filmStrip}>
+              {[...Array(3)].map((_, i) => (
+                <View key={i} style={styles.filmHole} />
+              ))}
+            </View>
+          </View>
+          <View style={styles.memberPill}>
+            <Ionicons name="people-outline" size={13} color={c.textMuted} />
+            <Text style={styles.memberText}>{memberCount}</Text>
+          </View>
+        </View>
+
+        <View style={styles.roomBadge}>
+          <Text style={styles.roomBadgeLabel}>
+            {isHost ? i18n.t("created") : i18n.t("joined")}
+          </Text>
+        </View>
+        <Text style={styles.roomTitle}>{i18n.t("watchTogether")}</Text>
+        <Text style={styles.roomSubtitle}>
+          {isHost ? i18n.t("share") : i18n.t("waiting")}
         </Text>
-      </View>
-      <Text style={styles.roomTitle}>{i18n.t("watchTogether")}</Text>
-      <Text style={styles.roomSubtitle}>
-        {isHost ? i18n.t("share") : i18n.t("waiting")}
-      </Text>
 
-      {isHost && !spotifySheetVisible && (
-        <Pressable
-          style={[
-            styles.spotifyBanner,
-            spotifyConnected && styles.spotifyBannerConnected,
-          ]}
-          onPress={() => setSpotifySheetVisible(true)}
-        >
-          <FontAwesome
-            name="spotify"
-            size={15}
-            color={spotifyConnected ? "#1DB954" : c.textMuted}
-          />
-          <Text
-            style={[
-              styles.spotifyBannerText,
-              spotifyConnected && { color: "#1DB954" },
-            ]}
-          >
-            {spotifyConnected ? i18n.t("spotifyConnected") : i18n.t("spotify")}
-          </Text>
-          {!spotifyConnected && (
-            <Ionicons
-              name="chevron-forward"
-              size={13}
-              color={c.textMuted}
-              style={{ marginLeft: "auto" }}
-            />
-          )}
-        </Pressable>
-      )}
-
-      <Pressable style={styles.codeBlock} onPress={handleCopyCode}>
-        <Text style={styles.codeLabel}>{i18n.t("roomcode")}</Text>
-        <Text style={styles.codeText}>{roomId}</Text>
-        <View style={styles.codeCopyHint}>
-          <Ionicons
-            name={copied ? "checkmark" : "copy-outline"}
-            size={13}
-            color={copied ? c.success : c.textMuted}
-          />
-          <Text style={[styles.codeCopyText, copied && { color: c.success }]}>
-            {copied ? i18n.t("copied") : i18n.t("copy")}
-          </Text>
-        </View>
-      </Pressable>
-
-      {!isLandscape && (
-        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveRoom}>
-          <Ionicons
-            name="exit-outline"
-            size={15}
-            color={c.textMuted}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={styles.leaveButtonText}>
-            {isHost ? i18n.t("closeroom") : i18n.t("leaveroom")}
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
-  const RightCol = (
-    <View style={[styles.rightCol, isLandscape && styles.rightColLandscape]}>
-      <View style={styles.queueSection}>
-        <View style={styles.queueHeader}>
-          <Text style={styles.sectionLabel}>{i18n.t("queue")}</Text>
+        {isHost && !spotifySheetVisible && (
           <Pressable
-            style={styles.addSongButton}
-            onPress={() => setSearchVisible(true)}
+            style={[
+              styles.spotifyBanner,
+              spotifyConnected && styles.spotifyBannerConnected,
+            ]}
+            onPress={() => setSpotifySheetVisible(true)}
           >
-            <Ionicons name="add" size={15} color={c.background} />
-            <Text style={styles.addSongText}>{i18n.t("proposeSong")}</Text>
+            <FontAwesome
+              name="spotify"
+              size={15}
+              color={spotifyConnected ? "#1DB954" : c.textMuted}
+            />
+            <Text
+              style={[
+                styles.spotifyBannerText,
+                spotifyConnected && { color: "#1DB954" },
+              ]}
+            >
+              {spotifyConnected
+                ? i18n.t("spotifyConnected")
+                : i18n.t("spotify")}
+            </Text>
+            {!spotifyConnected && (
+              <Ionicons
+                name="chevron-forward"
+                size={13}
+                color={c.textMuted}
+                style={{ marginLeft: "auto" }}
+              />
+            )}
           </Pressable>
-        </View>
-        {queue.length === 0 ? (
-          <View style={styles.queueEmpty}>
-            <Ionicons name="musical-notes-outline" size={26} color={c.border} />
-            <Text style={styles.queueEmptyText}>
-              {i18n.t("proposesongvote")}
+        )}
+
+        <Pressable style={styles.codeBlock} onPress={handleCopyCode}>
+          <Text style={styles.codeLabel}>{i18n.t("roomcode")}</Text>
+          <Text style={styles.codeText}>{roomId}</Text>
+          <View style={styles.codeCopyHint}>
+            <Ionicons
+              name={copied ? "checkmark" : "copy-outline"}
+              size={13}
+              color={copied ? c.success : c.textMuted}
+            />
+            <Text style={[styles.codeCopyText, copied && { color: c.success }]}>
+              {copied ? i18n.t("copied") : i18n.t("copy")}
             </Text>
           </View>
-        ) : (
-          <FlatList
-            data={queue}
-            keyExtractor={(item, i) => item.id + i}
-            showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-            renderItem={({ item, index }) => (
-              <View style={styles.queueTrackRow}>
-                <Text style={styles.queueIndex}>{index + 1}</Text>
-                {item.image ? (
-                  <Image source={{ uri: item.image }} style={styles.queueArt} />
-                ) : (
-                  <View style={[styles.queueArt, styles.albumArtFallback]}>
-                    <Ionicons name="musical-note" size={12} color={c.border} />
-                  </View>
-                )}
-                <View style={styles.trackInfo}>
-                  <Text style={styles.trackName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text style={styles.trackArtist} numberOfLines={1}>
-                    {item.artist}
-                  </Text>
-                </View>
-              </View>
-            )}
-          />
-        )}
-        {isHost && queue.length > 0 && (
+        </Pressable>
+
+        {!isLandscape && (
           <TouchableOpacity
-            style={{
-              backgroundColor: "#1DB954",
-              paddingVertical: 14,
-              borderRadius: 8,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              marginTop: 16,
-            }}
-            onPress={handleCreatePlaylist}
+            style={styles.leaveButton}
+            onPress={handleLeaveRoom}
           >
             <Ionicons
-              name="camera-outline"
-              size={20}
-              color="#000"
-              style={{ marginRight: 8 }}
+              name="exit-outline"
+              size={15}
+              color={c.textMuted}
+              style={{ marginRight: 6 }}
             />
-            <Text style={{ fontSize: 15, fontWeight: "700", color: "#000" }}>
-              {i18n.t("saveplaylist")}
+            <Text style={styles.leaveButtonText}>
+              {isHost ? i18n.t("closeroom") : i18n.t("leaveroom")}
             </Text>
           </TouchableOpacity>
         )}
       </View>
+    );
+  }
 
-      {isLandscape && (
-        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveRoom}>
-          <Ionicons
-            name="exit-outline"
-            size={15}
-            color={c.textMuted}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={styles.leaveButtonText}>
-            {isHost ? "Close room" : "Leave room"}
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+  function renderRightCol() {
+    return (
+      <View
+        style={isLandscape ? styles.rightColLandscape : styles.rightColPortrait}
+      >
+        <View style={styles.queueSection}>
+          <View style={styles.queueHeader}>
+            <Text style={styles.sectionLabel}>{i18n.t("queue")}</Text>
+            <Pressable
+              style={styles.addSongButton}
+              onPress={() => setSearchVisible(true)}
+            >
+              <Ionicons name="add" size={15} color={c.background} />
+              <Text style={styles.addSongText}>{i18n.t("proposeSong")}</Text>
+            </Pressable>
+          </View>
+          {queue.length === 0 ? (
+            <View style={styles.queueEmpty}>
+              <Ionicons
+                name="musical-notes-outline"
+                size={26}
+                color={c.border}
+              />
+              <Text style={styles.queueEmptyText}>
+                {i18n.t("proposesongvote")}
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={queue}
+              keyExtractor={(item, i) => item.id + i}
+              showsVerticalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={styles.separator} />}
+              renderItem={({ item, index }) => (
+                <View style={styles.queueTrackRow}>
+                  <Text style={styles.queueIndex}>{index + 1}</Text>
+                  {item.image ? (
+                    <Image
+                      source={{ uri: item.image }}
+                      style={styles.queueArt}
+                    />
+                  ) : (
+                    <View style={[styles.queueArt, styles.albumArtFallback]}>
+                      <Ionicons
+                        name="musical-note"
+                        size={12}
+                        color={c.border}
+                      />
+                    </View>
+                  )}
+                  <View style={styles.trackInfo}>
+                    <Text style={styles.trackName} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    <Text style={styles.trackArtist} numberOfLines={1}>
+                      {item.artist}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            />
+          )}
+          {isHost && queue.length > 0 && (
+            <TouchableOpacity
+              style={styles.playlistButton}
+              onPress={handleCreatePlaylist}
+            >
+              <Ionicons
+                name="camera-outline"
+                size={20}
+                color="#000"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.playlistButtonText}>
+                {i18n.t("saveplaylist")}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {isLandscape && (
+          <TouchableOpacity
+            style={styles.leaveButton}
+            onPress={handleLeaveRoom}
+          >
+            <Ionicons
+              name="exit-outline"
+              size={15}
+              color={c.textMuted}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.leaveButtonText}>
+              {isHost ? i18n.t("closeroom") : i18n.t("leaveroom")}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={[styles.content, isLandscape && styles.contentLandscape]}>
-        {LeftCol}
-        {RightCol}
+        {renderLeftCol()}
+        {renderRightCol()}
       </View>
 
       <VotePopup
@@ -855,15 +876,14 @@ const createStyles = (c) =>
     },
     contentLandscape: {
       flexDirection: "row",
-      gap: 24,
+      gap: 20,
       paddingTop: 16,
       paddingBottom: 16,
     },
 
-    // Portrait: single column. Landscape: left narrow, right flex
-    leftCol: { width: "100%" },
-    leftColLandscape: { width: 260, flexShrink: 0 },
-    rightCol: { flex: 1 },
+    leftColPortrait: { width: "100%" },
+    leftColLandscape: { width: 240, flexShrink: 0 },
+    rightColPortrait: { flex: 1 },
     rightColLandscape: { flex: 1 },
 
     header: {
@@ -916,13 +936,13 @@ const createStyles = (c) =>
       textTransform: "uppercase",
     },
     roomTitle: {
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: "700",
       color: c.text,
       marginBottom: 4,
       letterSpacing: -0.3,
     },
-    roomSubtitle: { fontSize: 13, color: c.textMuted, marginBottom: 14 },
+    roomSubtitle: { fontSize: 13, color: c.textMuted, marginBottom: 12 },
 
     spotifyBanner: {
       flexDirection: "row",
@@ -934,7 +954,7 @@ const createStyles = (c) =>
       borderRadius: 8,
       paddingHorizontal: 14,
       paddingVertical: 10,
-      marginBottom: 14,
+      marginBottom: 12,
     },
     spotifyBannerConnected: { borderColor: "#1DB954" },
     spotifyBannerText: {
@@ -952,7 +972,7 @@ const createStyles = (c) =>
       paddingVertical: 14,
       alignItems: "center",
       gap: 6,
-      marginBottom: 16,
+      marginBottom: 14,
     },
     codeLabel: {
       fontSize: 10,
@@ -961,7 +981,7 @@ const createStyles = (c) =>
       textTransform: "uppercase",
     },
     codeText: {
-      fontSize: 28,
+      fontSize: 26,
       fontWeight: "900",
       color: c.primary,
       letterSpacing: 8,
@@ -1007,7 +1027,7 @@ const createStyles = (c) =>
       borderColor: c.border,
       borderRadius: 8,
       borderStyle: "dashed",
-      minHeight: 120,
+      minHeight: 100,
     },
     queueEmptyText: { fontSize: 13, color: c.textMuted },
     queueTrackRow: {
@@ -1024,6 +1044,17 @@ const createStyles = (c) =>
     },
     queueArt: { width: 40, height: 40, borderRadius: 4 },
 
+    playlistButton: {
+      backgroundColor: "#1DB954",
+      paddingVertical: 13,
+      borderRadius: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 14,
+    },
+    playlistButtonText: { fontSize: 15, fontWeight: "700", color: "#000" },
+
     separator: { height: 1, backgroundColor: c.border, opacity: 0.4 },
 
     leaveButton: {
@@ -1034,7 +1065,7 @@ const createStyles = (c) =>
       borderRadius: 8,
       borderWidth: 1,
       borderColor: c.border,
-      marginTop: 16,
+      marginTop: 14,
     },
     leaveButtonText: {
       fontSize: 14,
@@ -1043,14 +1074,13 @@ const createStyles = (c) =>
       letterSpacing: 0.3,
     },
 
-    // Vote popup
     votePopup: {
       position: "absolute",
       bottom: 0,
       left: 0,
       right: 0,
       paddingHorizontal: 16,
-      paddingBottom: 32,
+      paddingBottom: 28,
     },
     votePopupInner: {
       backgroundColor: c.surface,
@@ -1129,7 +1159,6 @@ const createStyles = (c) =>
     voteBtnActiveNo: { backgroundColor: c.error, borderColor: c.error },
     voteBtnText: { fontSize: 14, fontWeight: "700" },
 
-    // Toast
     resultToast: {
       position: "absolute",
       top: 60,
@@ -1151,7 +1180,6 @@ const createStyles = (c) =>
       fontWeight: "600",
     },
 
-    // Sheets
     backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)" },
     sheetWrapper: { justifyContent: "flex-end" },
     sheet: {
@@ -1162,7 +1190,9 @@ const createStyles = (c) =>
       borderColor: c.border,
       paddingHorizontal: 24,
       paddingBottom: 40,
-      maxHeight: "85%",
+      maxHeight: "92%",
+      marginTop: Platform.OS === "ios" ? 44 : 24,
+      flexShrink: 1,
     },
     sheetHandle: {
       width: 36,

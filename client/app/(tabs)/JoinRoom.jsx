@@ -84,19 +84,23 @@ export default function JoinRoom() {
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>{i18n.t("hostAParty")}</Text>
         <View style={styles.card}>
-          <View style={styles.cardIcon}>
-            <Ionicons name="tv-outline" size={20} color={c.primary} />
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.cardIcon}>
+              <Ionicons name="tv-outline" size={20} color={c.primary} />
+            </View>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleCreateParty}
+            >
+              <Text style={styles.primaryButtonText}>
+                {i18n.t("createBtn")}
+              </Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.cardTitle}>{i18n.t("createARoom")}</Text>
             <Text style={styles.cardDesc}>{i18n.t("createDesc")}</Text>
           </View>
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleCreateParty}
-          >
-            <Text style={styles.primaryButtonText}>{i18n.t("createBtn")}</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -201,7 +205,7 @@ const createStyles = (c) =>
     },
 
     contentCol: { flex: 1 },
-    contentColLandscape: { flex: 1, paddingLeft: 32 },
+    contentColLandscape: { flex: 1, paddingLeft: 32, paddingRight: 32 },
 
     pageTitle: {
       fontSize: 26,
@@ -234,6 +238,12 @@ const createStyles = (c) =>
       borderRadius: 8,
       padding: 16,
       gap: 10,
+    },
+    cardHeaderRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 4,
     },
     cardIcon: {
       width: 36,
