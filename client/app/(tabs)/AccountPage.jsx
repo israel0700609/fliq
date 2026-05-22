@@ -37,13 +37,12 @@ export default function AccountPage() {
   const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user)
       setValues({
         firstname: user.firstname || "",
         lastname: user.lastname || "",
         phone: user.phone || "",
       });
-    }
   }, [user]);
 
   const updateField = (name, value) => {
@@ -58,11 +57,8 @@ export default function AccountPage() {
     setIsPending(true);
     const { success, message } = await updateUser(values);
     setIsPending(false);
-    if (success) {
-      setIsEditing(false);
-    } else {
-      setErrors((p) => ({ ...p, _server: message }));
-    }
+    if (success) setIsEditing(false);
+    else setErrors((p) => ({ ...p, _server: message }));
   };
 
   const handleCancelEdit = () => {
@@ -82,20 +78,19 @@ export default function AccountPage() {
 
   function renderField(label, name, keyboardType = "default") {
     const isFieldValid = values[name]?.length > 0 && !errors[name];
-    const isDisabled = !isEditing;
     return (
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>{label}</Text>
         <TextInput
           style={[
             styles.input,
-            isDisabled && styles.inputDisabled,
+            !isEditing && styles.inputDisabled,
             errors[name] && styles.inputError,
             isFieldValid && isEditing && styles.inputSuccess,
           ]}
           value={values[name]}
           onChangeText={(v) => updateField(name, v)}
-          editable={!isDisabled}
+          editable={isEditing}
           placeholder={i18n.t("enterYourField", { field: label.toLowerCase() })}
           placeholderTextColor={c.textMuted}
           keyboardType={keyboardType}
@@ -110,134 +105,6 @@ export default function AccountPage() {
     );
   }
 
-  const BrandAndHeader = (
-    <View style={[styles.leftCol, isLandscape && styles.leftColLandscape]}>
-      <View style={styles.brandRow}>
-        <View style={styles.filmStrip}>
-          {[...Array(4)].map((_, i) => (
-            <View key={i} style={styles.filmHole} />
-          ))}
-        </View>
-        <Text style={styles.appName}>FLIQ</Text>
-        <View style={styles.filmStrip}>
-          {[...Array(4)].map((_, i) => (
-            <View key={i} style={styles.filmHole} />
-          ))}
-        </View>
-      </View>
-      {isLandscape && (
-        <>
-          <Text style={styles.pageTitle}>{i18n.t("myAccount")}</Text>
-          <Text style={styles.pageSubtitle}>
-            {isEditing ? i18n.t("editingProfile") : i18n.t("yourProfileInfo")}
-          </Text>
-        </>
-      )}
-    </View>
-  );
-
-  const FormContent = (
-    <View style={[styles.rightCol, isLandscape && styles.rightColLandscape]}>
-      {!isLandscape && (
-        <View style={styles.pageHeader}>
-          <View>
-            <Text style={styles.pageTitle}>{i18n.t("myAccount")}</Text>
-            <Text style={styles.pageSubtitle}>
-              {isEditing ? i18n.t("editingProfile") : i18n.t("yourProfileInfo")}
-            </Text>
-          </View>
-          <Pressable
-            style={styles.editButton}
-            onPress={isEditing ? handleCancelEdit : () => setIsEditing(true)}
-          >
-            <Ionicons
-              name={isEditing ? "close" : "create-outline"}
-              size={16}
-              color={isEditing ? c.textMuted : c.primary}
-            />
-            <Text
-              style={[
-                styles.editButtonText,
-                isEditing && { color: c.textMuted },
-              ]}
-            >
-              {isEditing ? i18n.t("cancel") : i18n.t("edit")}
-            </Text>
-          </Pressable>
-        </View>
-      )}
-
-      {isLandscape && (
-        <Pressable
-          style={[
-            styles.editButton,
-            { alignSelf: "flex-end", marginBottom: 16 },
-          ]}
-          onPress={isEditing ? handleCancelEdit : () => setIsEditing(true)}
-        >
-          <Ionicons
-            name={isEditing ? "close" : "create-outline"}
-            size={16}
-            color={isEditing ? c.textMuted : c.primary}
-          />
-          <Text
-            style={[styles.editButtonText, isEditing && { color: c.textMuted }]}
-          >
-            {isEditing ? i18n.t("cancel") : i18n.t("edit")}
-          </Text>
-        </Pressable>
-      )}
-
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>{i18n.t("email")}</Text>
-        <TextInput
-          style={[styles.input, styles.inputDisabled]}
-          value={user?.email || ""}
-          editable={false}
-          placeholderTextColor={c.textMuted}
-        />
-        <View style={{ height: 16 }} />
-      </View>
-
-      {renderField(i18n.t("firstName"), "firstname")}
-      {renderField(i18n.t("lastName"), "lastname")}
-      {renderField(i18n.t("phone"), "phone", "phone-pad")}
-
-      {errors._server && (
-        <Text style={styles.serverError}>{errors._server}</Text>
-      )}
-
-      {isEditing && (
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            (!isFormValid || isPending) && styles.saveButtonDisabled,
-          ]}
-          onPress={handleUpdate}
-          disabled={!isFormValid || isPending}
-        >
-          {isPending ? (
-            <ActivityIndicator color={c.background} size="small" />
-          ) : (
-            <Text style={styles.saveButtonText}>{i18n.t("saveChanges")}</Text>
-          )}
-        </TouchableOpacity>
-      )}
-
-      <View style={styles.divider} />
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons
-          name="log-out-outline"
-          size={16}
-          color={c.error}
-          style={{ marginRight: 6 }}
-        />
-        <Text style={styles.logoutText}>{i18n.t("logout")}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -245,15 +112,110 @@ export default function AccountPage() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={[
-            styles.scroll,
-            isLandscape && styles.scrollLandscape,
-          ]}
+          contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {BrandAndHeader}
-          {FormContent}
+          {/* Brand */}
+          <View style={styles.brandRow}>
+            <View style={styles.filmStrip}>
+              {[...Array(4)].map((_, i) => (
+                <View key={i} style={styles.filmHole} />
+              ))}
+            </View>
+            <Text style={styles.appName}>FLIQ</Text>
+            <View style={styles.filmStrip}>
+              {[...Array(4)].map((_, i) => (
+                <View key={i} style={styles.filmHole} />
+              ))}
+            </View>
+          </View>
+
+          {/* Page header */}
+          <View style={styles.pageHeader}>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={styles.pageTitle}>{i18n.t("myAccount")}</Text>
+              <Text style={styles.pageSubtitle}>
+                {isEditing
+                  ? i18n.t("editingProfile")
+                  : i18n.t("yourProfileInfo")}
+              </Text>
+            </View>
+            <Pressable
+              style={styles.editButton}
+              onPress={isEditing ? handleCancelEdit : () => setIsEditing(true)}
+            >
+              <Ionicons
+                name={isEditing ? "close" : "create-outline"}
+                size={16}
+                color={isEditing ? c.textMuted : c.primary}
+              />
+              <Text
+                style={[
+                  styles.editButtonText,
+                  isEditing && { color: c.textMuted },
+                ]}
+              >
+                {isEditing ? i18n.t("cancel") : i18n.t("edit")}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Form — centered and width-capped on landscape */}
+          <View style={[styles.form, isLandscape && styles.formLandscape]}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>{i18n.t("email")}</Text>
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={user?.email || ""}
+                editable={false}
+                placeholderTextColor={c.textMuted}
+              />
+              <View style={{ height: 16 }} />
+            </View>
+
+            {renderField(i18n.t("firstName"), "firstname")}
+            {renderField(i18n.t("lastName"), "lastname")}
+            {renderField(i18n.t("phone"), "phone", "phone-pad")}
+
+            {errors._server && (
+              <Text style={styles.serverError}>{errors._server}</Text>
+            )}
+
+            {isEditing && (
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  (!isFormValid || isPending) && styles.saveButtonDisabled,
+                ]}
+                onPress={handleUpdate}
+                disabled={!isFormValid || isPending}
+              >
+                {isPending ? (
+                  <ActivityIndicator color={c.background} size="small" />
+                ) : (
+                  <Text style={styles.saveButtonText}>
+                    {i18n.t("saveChanges")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
+
+            <View style={styles.divider} />
+
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Ionicons
+                name="log-out-outline"
+                size={16}
+                color={c.error}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={styles.logoutText}>{i18n.t("logout")}</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -263,22 +225,19 @@ export default function AccountPage() {
 const createStyles = (c) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: c.background },
-    scroll: { paddingHorizontal: 24, paddingTop: 40, paddingBottom: 48 },
-    scrollLandscape: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      paddingVertical: 24,
-      gap: 32,
+    scroll: {
+      paddingHorizontal: 24,
+      paddingTop: 36,
+      paddingBottom: 48,
+      alignItems: "center",
     },
-
-    leftCol: {},
-    leftColLandscape: { width: 180, paddingTop: 8, alignItems: "center" },
 
     brandRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
       marginBottom: 28,
+      alignSelf: "center",
     },
     filmStrip: { gap: 5 },
     filmHole: {
@@ -299,6 +258,8 @@ const createStyles = (c) =>
       alignItems: "flex-start",
       justifyContent: "space-between",
       marginBottom: 28,
+      width: "100%",
+      maxWidth: 480,
     },
     pageTitle: {
       fontSize: 24,
@@ -313,9 +274,6 @@ const createStyles = (c) =>
       marginTop: 4,
     },
 
-    rightCol: {},
-    rightColLandscape: { flex: 1 },
-
     editButton: {
       flexDirection: "row",
       alignItems: "center",
@@ -326,6 +284,7 @@ const createStyles = (c) =>
       borderRadius: 6,
       paddingHorizontal: 12,
       paddingVertical: 7,
+      flexShrink: 0,
     },
     editButtonText: {
       fontSize: 13,
@@ -333,6 +292,9 @@ const createStyles = (c) =>
       color: c.primary,
       letterSpacing: 0.3,
     },
+
+    form: { width: "100%" },
+    formLandscape: { maxWidth: 480 },
 
     inputWrapper: { marginBottom: 2 },
     inputLabel: {
