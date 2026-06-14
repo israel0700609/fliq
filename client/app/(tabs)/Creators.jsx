@@ -1,11 +1,12 @@
-import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
-import { useTheme } from '../../hooks/useTheme';
-import Colors from '../../constants/Colors';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { useApp } from '../../hooks/AppContext';
+import { getColors } from '../../constants/theme';
+import { useMemo } from 'react';
 
 export default function CreatorsScreen() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const colors = Colors[theme];
+  const { isDark } = useApp();
+  const colors = getColors(isDark);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const creators = [
     {
@@ -31,7 +32,7 @@ export default function CreatorsScreen() {
         <Text style={[styles.title, { color: colors.text }]}>
           Meet the Creators
         </Text>
-        <Text style={[styles.subtitle, { color: colors.tabIconDefault }]}>
+        <Text style={[styles.subtitle, { color: colors.description }]}>
           The brilliant minds behind FLIQ
         </Text>
       </View>
@@ -43,8 +44,8 @@ export default function CreatorsScreen() {
             style={[
               styles.creatorCard,
               {
-                backgroundColor: isDark ? colors.cardBackground : '#f5f5f5',
-                borderColor: colors.tabIconDefault,
+                backgroundColor: isDark ? colors.surface : '#f5f5f5',
+                borderColor: colors.border,
               },
             ]}
           >
@@ -52,7 +53,7 @@ export default function CreatorsScreen() {
               style={[
                 styles.avatar,
                 {
-                  backgroundColor: Colors.light.tint,
+                  backgroundColor: colors.tint,
                 },
               ]}
             >
@@ -63,7 +64,7 @@ export default function CreatorsScreen() {
               {creator.name}
             </Text>
 
-            <Text style={[styles.role, { color: colors.tabIconDefault }]}>
+            <Text style={[styles.role, { color: colors.description }]}>
               {creator.role}
             </Text>
 
@@ -74,8 +75,8 @@ export default function CreatorsScreen() {
         ))}
       </View>
 
-      <View style={[styles.footer, { borderTopColor: colors.tabIconDefault }]}>
-        <Text style={[styles.footerText, { color: colors.tabIconDefault }]}>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+        <Text style={[styles.footerText, { color: colors.description }]}>
           Built with ❤️ by the FLIQ team
         </Text>
       </View>
@@ -83,7 +84,7 @@ export default function CreatorsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) =>yles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
   },
