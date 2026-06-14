@@ -3,6 +3,79 @@ import { useApp } from '../../hooks/AppContext';
 import { getColors } from '../../constants/theme';
 import { useMemo } from 'react';
 
+const createStyles = (colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    contentContainer: {
+      padding: 20,
+      paddingBottom: 40,
+    },
+    header: {
+      marginBottom: 30,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    creatorsGrid: {
+      gap: 20,
+      marginBottom: 30,
+    },
+    creatorCard: {
+      borderRadius: 12,
+      padding: 20,
+      alignItems: 'center',
+      borderWidth: 1,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    avatarText: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#fff',
+    },
+    creatorName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 6,
+      textAlign: 'center',
+    },
+    role: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    bio: {
+      fontSize: 13,
+      lineHeight: 20,
+      textAlign: 'center',
+    },
+    footer: {
+      borderTopWidth: 1,
+      paddingTop: 20,
+      alignItems: 'center',
+    },
+    footerText: {
+      fontSize: 12,
+      fontWeight: '500',
+    },
+  });
+
 export default function CreatorsScreen() {
   const { isDark } = useApp();
   const colors = getColors(isDark);
@@ -83,75 +156,3 @@ export default function CreatorsScreen() {
     </ScrollView>
   );
 }
-
-const createStyles = (colors) =>yles = (colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 30,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  creatorsGrid: {
-    gap: 20,
-    marginBottom: 30,
-  },
-  creatorCard: {
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatarText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  creatorName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  role: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  bio: {
-    fontSize: 13,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  footer: {
-    borderTopWidth: 1,
-    paddingTop: 20,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-});
