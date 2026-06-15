@@ -1,4 +1,5 @@
 import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../../hooks/AppContext';
 import { getColors } from '../../constants/theme';
 import { useMemo } from 'react';
@@ -7,6 +8,29 @@ const createStyles = (colors) =>
   StyleSheet.create({
     container: {
       flex: 1,
+    },
+    backgroundGradient: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    glowCircleTop: {
+      position: 'absolute',
+      top: -120,
+      right: -100,
+      width: 300,
+      height: 300,
+      borderRadius: 150,
+      borderWidth: 2,
+      borderColor: 'rgba(124,92,255,0.25)',
+    },
+    glowCircleBottom: {
+      position: 'absolute',
+      bottom: -190,
+      left: -120,
+      width: 360,
+      height: 360,
+      borderRadius: 180,
+      borderWidth: 2,
+      borderColor: 'rgba(167,139,250,0.18)',
     },
     contentContainer: {
       padding: 20,
@@ -102,10 +126,17 @@ export default function CreatorsScreen() {
   ];
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-    >
+    <View style={[styles.container, { backgroundColor: colors.background }]}> 
+      <LinearGradient
+        pointerEvents="none"
+        colors={isDark ? ['#0b0a1f', '#17143a', '#241f56'] : ['#f4f2ff', '#ede8ff', '#e8e2ff']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.backgroundGradient}
+      />
+      <View pointerEvents="none" style={styles.glowCircleTop} />
+      <View pointerEvents="none" style={styles.glowCircleBottom} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: '#f8fafc' }]}>
           היוצרים
@@ -149,6 +180,7 @@ export default function CreatorsScreen() {
           נבנה באהבה על ידי צוות FLIQ
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

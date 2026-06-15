@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useApp } from "../../hooks/AppContext";
@@ -107,6 +108,15 @@ export default function AccountPage() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <LinearGradient
+        pointerEvents="none"
+        colors={isDark ? ["#0b0a1f", "#17143a", "#241f56"] : ["#f4f2ff", "#ede8ff", "#e8e2ff"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.backgroundGradient}
+      />
+      <View pointerEvents="none" style={styles.glowCircleTop} />
+      <View pointerEvents="none" style={styles.glowCircleBottom} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -225,6 +235,29 @@ export default function AccountPage() {
 const createStyles = (c) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: c.background },
+    backgroundGradient: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    glowCircleTop: {
+      position: "absolute",
+      top: -120,
+      left: -110,
+      width: 300,
+      height: 300,
+      borderRadius: 150,
+      borderWidth: 2,
+      borderColor: "rgba(124,92,255,0.25)",
+    },
+    glowCircleBottom: {
+      position: "absolute",
+      bottom: -180,
+      right: -120,
+      width: 360,
+      height: 360,
+      borderRadius: 180,
+      borderWidth: 2,
+      borderColor: "rgba(167,139,250,0.18)",
+    },
     scroll: {
       paddingHorizontal: 24,
       paddingTop: 36,

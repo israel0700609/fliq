@@ -18,6 +18,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
@@ -826,6 +827,19 @@ export default function WatchParty() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <LinearGradient
+        pointerEvents="none"
+        colors={
+          isDark
+            ? ["#0b0a1f", "#17143a", "#241f56"]
+            : ["#f4f2ff", "#ede8ff", "#e8e2ff"]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.backgroundGradient}
+      />
+      <View pointerEvents="none" style={styles.glowCircleTop} />
+      <View pointerEvents="none" style={styles.glowCircleBottom} />
       <View style={[styles.content, isLandscape && styles.contentLandscape]}>
         {renderLeftCol()}
         {renderRightCol()}
@@ -868,6 +882,29 @@ export default function WatchParty() {
 const createStyles = (c) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: c.background },
+    backgroundGradient: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    glowCircleTop: {
+      position: "absolute",
+      top: -140,
+      right: -100,
+      width: 340,
+      height: 340,
+      borderRadius: 170,
+      borderWidth: 2,
+      borderColor: "rgba(124,92,255,0.22)",
+    },
+    glowCircleBottom: {
+      position: "absolute",
+      bottom: -180,
+      left: -120,
+      width: 380,
+      height: 380,
+      borderRadius: 190,
+      borderWidth: 2,
+      borderColor: "rgba(167,139,250,0.18)",
+    },
     content: {
       flex: 1,
       paddingHorizontal: 24,

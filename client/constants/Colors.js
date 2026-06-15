@@ -1,27 +1,27 @@
-// Dark palette — cinematic, warm ink
+// Dark palette — indigo/violet glow (matches app mockups)
 const Dark = {
-  background: "#0f0d0b",
-  surface: "#1a1612",
-  primary: "#c9943a",
-  accent: "#e8d5a3",
-  text: "#f0e8dc",
-  textMuted: "#6b5e4e",
-  border: "#2c231a",
-  success: "#5c9e72",
-  error: "#b85050",
+  background: "#0b0a1f",
+  surface: "#2c1e52",
+  primary: "#8b6bff",
+  accent: "#a78bfa",
+  text: "#f8f7ff",
+  textMuted: "#9b92c9",
+  border: "#4b3f7a",
+  success: "#39d98a",
+  error: "#ff6b8a",
 };
 
-// Light palette — warm parchment, same cinematic soul
+// Light palette — soft lavender tint, same visual family
 const Light = {
-  background: "#faf7f2",
-  surface: "#f0ebe2",
-  primary: "#a67128",
-  accent: "#c4943a",
-  text: "#1c1410",
-  textMuted: "#8a7560",
-  border: "#ddd0bc",
-  success: "#3d7a52",
-  error: "#a03030",
+  background: "#f4f2ff",
+  surface: "#e9e2ff",
+  primary: "#7c5cff",
+  accent: "#9f86ff",
+  text: "#1d1638",
+  textMuted: "#6f6698",
+  border: "#cfc6ff",
+  success: "#1ea768",
+  error: "#d6375f",
 };
 
 export { Dark, Light };
