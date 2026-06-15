@@ -39,10 +39,12 @@ const createStyles = (colors) =>
     header: {
       marginBottom: 30,
       alignItems: 'center',
-      backgroundColor: '#0f172a',
+      backgroundColor: '#103221',
       borderRadius: 16,
       paddingVertical: 16,
       paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: '#2ecb71',
     },
     title: {
       fontSize: 28,
@@ -74,7 +76,7 @@ const createStyles = (colors) =>
       borderRadius: 48,
       marginBottom: 16,
       borderWidth: 2,
-      borderColor: '#ffffff',
+      borderColor: '#b6f5ce',
     },
     creatorName: {
       fontSize: 18,
@@ -138,10 +140,10 @@ export default function CreatorsScreen() {
       <View pointerEvents="none" style={styles.glowCircleBottom} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: '#f8fafc' }]}>
+        <Text style={[styles.title, { color: '#c9f7dc' }]}>
           היוצרים
         </Text>
-        <Text style={[styles.subtitle, { color: '#cbd5e1' }]}>
+        <Text style={[styles.subtitle, { color: '#9ee5bb' }]}>
           האנשים שמאחורי FLIQ
         </Text>
       </View>
@@ -153,8 +155,8 @@ export default function CreatorsScreen() {
             style={[
               styles.creatorCard,
               {
-                backgroundColor: isDark ? '#1e293b' : '#f8fafc',
-                borderColor: isDark ? '#334155' : '#cbd5e1',
+                backgroundColor: isDark ? '#0f2b1c' : '#eafaf1',
+                borderColor: isDark ? '#2ecb71' : '#7edda9',
               },
             ]}
           >
@@ -175,8 +177,8 @@ export default function CreatorsScreen() {
         ))}
       </View>
 
-      <View style={[styles.footer, { borderTopColor: colors.border }]}>
-        <Text style={[styles.footerText, { color: colors.description }]}>
+      <View style={[styles.footer, { borderTopColor: isDark ? '#2ecb71' : '#7edda9' }]}>
+        <Text style={[styles.footerText, { color: isDark ? '#9ee5bb' : '#1f7a46' }]}>
           נבנה באהבה על ידי צוות FLIQ
         </Text>
       </View>
