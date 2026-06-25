@@ -28,7 +28,7 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useApp } from "../../hooks/AppContext";
 import { getColors } from "../../constants/theme";
 import { getSocket } from "../../lib/socket.js";
-
+import { useAuth } from "../../hooks/useAuth.js";
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 const socket = getSocket(SERVER_URL);
 
@@ -309,6 +309,8 @@ function SpotifyConnectSheet({
 
 // ── Search sheet ──────────────────────────────────────────────────────────────
 function SearchSheet({ visible, onClose, roomId, c, styles }) {
+  const { user } = useAuth();
+
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -339,7 +341,12 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
 
   const handlePropose = (track) => {
     setProposedIds((prev) => [...prev, track.id]);
-    socket.emit("propose_song", { track, roomId });
+    const fullName = user ? `${user.firstname} ${user.lastname}` : "Guest";
+    socket.emit("propose_song", {
+      track,
+      roomId,
+      userName: fullName,
+    });
   };
 
   const handleClose = () => {
@@ -506,6 +513,8 @@ export default function WatchParty() {
   const { isDark, isLandscape } = useApp();
   const c = getColors(isDark);
   const styles = useMemo(() => createStyles(c), [c]);
+  const { user } = useAuth();
+  const fullName = user ? `${user.firstname} ${user.lastname}` : "Guest";
 
   const [copied, setCopied] = useState(false);
   const [memberCount, setMemberCount] = useState(1);
@@ -518,10 +527,14 @@ export default function WatchParty() {
   const voteTimers = useRef({});
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !user) return;
     setSpotifyConnected(false);
-    socket.emit("join_room", roomId);
+    setSpotifySheetVisible(isHost);
 
+    socket.emit("join_room", roomId, {
+      firstname: user.firstname,
+      lastname: user.lastname,
+    });
     socket.on("member_count", setMemberCount);
     socket.on("queue_updated", setQueue);
     socket.on("room_closed", () => router.replace("/(tabs)/JoinRoom"));
@@ -570,14 +583,18 @@ export default function WatchParty() {
       socket.off("vote_update");
       socket.off("vote_result");
       Object.values(voteTimers.current).forEach(clearInterval);
+      setSpotifySheetVisible(false);
+      setSpotifyConnected(false);
     };
-  }, []);
+  }, [roomId, isHost, user]);
 
   const handleCastVote = (trackUri, vote) =>
     socket.emit("cast_vote", { trackUri, roomId, vote });
+
   const handleLeaveRoom = () => {
     if (isHost) socket.emit("close_room", roomId);
     else socket.emit("leave_room", roomId);
+
     router.replace("/(tabs)/JoinRoom");
   };
   const handleCopyCode = () => {
@@ -864,6 +881,7 @@ export default function WatchParty() {
         roomId={roomId}
         c={c}
         styles={styles}
+        user={user}
       />
       {isHost && (
         <SpotifyConnectSheet
