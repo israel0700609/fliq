@@ -82,6 +82,19 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="Creators"
+        options={{
+          title: "היוצרים",
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name={focused ? "people" : "people-outline"}
+              color={color}
+              focused={focused}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
