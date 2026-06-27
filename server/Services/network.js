@@ -54,7 +54,7 @@ const finalizeVote = async (io, roomId, trackUri, passed) => {
   if (!votes || !votes[trackUri]) return;
 
   const vote = votes[trackUri];
-  if (vote.locked) return; // another async call already handling this
+  if (vote.locked) return;
   vote.locked = true;
 
   clearTimeout(vote.timer);

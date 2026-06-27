@@ -307,7 +307,6 @@ function SpotifyConnectSheet({
   );
 }
 
-// ── Search sheet ──────────────────────────────────────────────────────────────
 function SearchSheet({ visible, onClose, roomId, c, styles }) {
   const { user } = useAuth();
 
@@ -505,7 +504,6 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
   );
 }
 
-// ── Main screen ───────────────────────────────────────────────────────────────
 export default function WatchParty() {
   const router = useRouter();
   const { roomId, isHost: isHostParam } = useLocalSearchParams();
@@ -637,7 +635,6 @@ export default function WatchParty() {
     }
   };
 
-  // ── render functions (not JSX vars) so they always have fresh state ──────
   function renderLeftCol() {
     return (
       <View
