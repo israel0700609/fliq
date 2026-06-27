@@ -1,14 +1,7 @@
 import { Dark, Light } from "./Colors";
 
-// Returns the correct color palette based on isDark
 export const getColors = (isDark) => (isDark ? Dark : Light);
 
-// ── Landscape layout helpers ──────────────────────────────────────────────────
-
-/**
- * Returns container props that split into a two-column layout in landscape.
- * Use on the outermost scrollable/flex container.
- */
 export const getContainerStyle = (isLandscape, colors) => ({
   flex: 1,
   backgroundColor: colors.background,
@@ -16,10 +9,6 @@ export const getContainerStyle = (isLandscape, colors) => ({
   alignItems: isLandscape ? "flex-start" : "stretch",
 });
 
-/**
- * In landscape, the brand/header column takes up ~38% and stays fixed.
- * In portrait, it's just a normal top section.
- */
 export const getBrandColumnStyle = (isLandscape) =>
   isLandscape
     ? {
@@ -37,10 +26,6 @@ export const getBrandColumnStyle = (isLandscape) =>
         paddingBottom: 8,
       };
 
-/**
- * In landscape, the form/content column takes the remaining 62%.
- * In portrait, it takes full width.
- */
 export const getFormColumnStyle = (isLandscape) =>
   isLandscape
     ? {
@@ -55,7 +40,4 @@ export const getFormColumnStyle = (isLandscape) =>
         paddingBottom: 32,
       };
 
-/**
- * Max width for form content — keeps it readable on wide screens
- */
 export const FORM_MAX_WIDTH = 420;
