@@ -21,7 +21,7 @@ const InitialLayout = () => {
     } else if (isAuthenticated && inAuthGroup) {
       router.replace('/(tabs)/WatchParty'); 
     }
-  }, [isAuthenticated, loading, segments, rootNavigationState?.key]);
+  }, [isAuthenticated, loading, router, segments, rootNavigationState?.key]);
 
   return (
     <Stack

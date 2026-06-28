@@ -1,5 +1,5 @@
 import { Alert } from "react-native";
-import io from "socket.io-client";
+import socketIOClient from "socket.io-client";
 
 let socketInstance = null;
 let socketUrl = null;
@@ -12,7 +12,7 @@ export function getSocket(SERVER_URL) {
     );
   }
   if (!socketInstance || socketUrl !== SERVER_URL) {
-    socketInstance = io(SERVER_URL, {
+    socketInstance = socketIOClient(SERVER_URL, {
       transports: ["websocket"],
       autoConnect: true,
     });

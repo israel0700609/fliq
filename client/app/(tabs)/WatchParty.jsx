@@ -47,7 +47,7 @@ function VotePopup({ vote, onVote, mySocketId, c, styles }) {
         friction: 12,
       }).start();
     else slideAnim.setValue(120);
-  }, [vote?.trackUri]);
+  }, [slideAnim, vote]);
 
   if (!vote) return null;
   const total = vote.total || 1;
@@ -167,7 +167,7 @@ function VoteResultToast({ result, onDismiss, c, styles }) {
         useNativeDriver: true,
       }),
     ]).start(() => onDismiss());
-  }, [result?.trackUri]);
+  }, [onDismiss, opacity, result]);
   if (!result) return null;
   return (
     <Animated.View
@@ -519,6 +519,7 @@ export default function WatchParty() {
 
   useEffect(() => {
     if (!roomId) return;
+    const timers = voteTimers.current;
     setSpotifyConnected(false);
     socket.emit("join_room", roomId);
 
@@ -530,9 +531,8 @@ export default function WatchParty() {
     socket.on("vote_started", (data) => {
       setCurrentVote((prev) => prev ?? { ...data, secondsLeft: 30 });
       let seconds = 30;
-      if (voteTimers.current[data.trackUri])
-        clearInterval(voteTimers.current[data.trackUri]);
-      voteTimers.current[data.trackUri] = setInterval(() => {
+      if (timers[data.trackUri]) clearInterval(timers[data.trackUri]);
+      timers[data.trackUri] = setInterval(() => {
         seconds -= 1;
         setCurrentVote((prev) =>
           prev?.trackUri === data.trackUri
@@ -540,8 +540,8 @@ export default function WatchParty() {
             : prev,
         );
         if (seconds <= 0) {
-          clearInterval(voteTimers.current[data.trackUri]);
-          delete voteTimers.current[data.trackUri];
+          clearInterval(timers[data.trackUri]);
+          delete timers[data.trackUri];
         }
       }, 1000);
     });
@@ -553,8 +553,8 @@ export default function WatchParty() {
     });
 
     socket.on("vote_result", (data) => {
-      clearInterval(voteTimers.current[data.trackUri]);
-      delete voteTimers.current[data.trackUri];
+      clearInterval(timers[data.trackUri]);
+      delete timers[data.trackUri];
       setCurrentVote((prev) =>
         prev?.trackUri === data.trackUri ? null : prev,
       );
@@ -569,9 +569,9 @@ export default function WatchParty() {
       socket.off("vote_started");
       socket.off("vote_update");
       socket.off("vote_result");
-      Object.values(voteTimers.current).forEach(clearInterval);
+      Object.values(timers).forEach(clearInterval);
     };
-  }, []);
+  }, [roomId, router]);
 
   const handleCastVote = (trackUri, vote) =>
     socket.emit("cast_vote", { trackUri, roomId, vote });
