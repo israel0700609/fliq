@@ -16,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useApp } from "../../hooks/AppContext";
-import { getColors } from "../../constants/theme";
+import { getColors } from "../../constants";
 import {
   handleSocket,
   SocketCreateParty,
@@ -32,7 +32,7 @@ export default function JoinRoom() {
   const { isDark, isLandscape } = useApp();
   const c = getColors(isDark);
   const styles = useMemo(() => createStyles(c), [c]);
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [roomCode, setRoomCode] = useState("");
   const [socket, setSocket] = useState(null);
 

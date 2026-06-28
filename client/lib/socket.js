@@ -36,9 +36,6 @@ export function handleSocket(socket, router) {
       params: { roomId, isHost: "true" },
     });
   });
-  socket.on("vote_track", ({ track }) => {
-    propsevote(track);
-  });
   socket.on("room_joined", (roomId) => {
     router.push({
       pathname: "/(tabs)/WatchParty",

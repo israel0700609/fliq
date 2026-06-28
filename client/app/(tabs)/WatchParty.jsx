@@ -26,7 +26,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useApp } from "../../hooks/AppContext";
-import { getColors } from "../../constants/theme";
+import { getColors } from "../../constants";
 import { getSocket } from "../../lib/socket.js";
 
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
@@ -420,7 +420,7 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
           ) : results.length === 0 && query.length > 0 ? (
             <View style={styles.centeredState}>
               <Text style={styles.emptyText}>
-                {i18n.t("noResultsFor")} "{query}"
+                {i18n.t("noResultsFor")} &quot;{query}&quot;
               </Text>
             </View>
           ) : results.length === 0 ? (

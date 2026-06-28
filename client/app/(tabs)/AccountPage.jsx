@@ -17,7 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useApp } from "../../hooks/AppContext";
-import { getColors } from "../../constants/theme";
+import { getColors } from "../../constants";
 import { validate, checkValidationUpdate } from "../../lib/utils";
 import { useAuth } from "../../hooks/useAuth.js";
 

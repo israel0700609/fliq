@@ -1,7 +1,7 @@
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
 import { AppProvider } from '../hooks/AppContext';
-import Colors from '../constants/Colors';
+import { Colors } from '../constants';
 import { useEffect } from 'react';
 
 const InitialLayout = () => {
