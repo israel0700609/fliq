@@ -32,7 +32,6 @@ import { useAuth } from "../../hooks/useAuth.js";
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 const socket = getSocket(SERVER_URL);
 
-// ── Vote popup ────────────────────────────────────────────────────────────────
 function VotePopup({ vote, onVote, mySocketId, c, styles }) {
   const slideAnim = useRef(new Animated.Value(120)).current;
   const hasVotedYes = vote?.yesVoters?.includes(mySocketId);
@@ -149,7 +148,6 @@ function VotePopup({ vote, onVote, mySocketId, c, styles }) {
   );
 }
 
-// ── Vote result toast ─────────────────────────────────────────────────────────
 function VoteResultToast({ result, onDismiss, c, styles }) {
   const opacity = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -187,7 +185,6 @@ function VoteResultToast({ result, onDismiss, c, styles }) {
   );
 }
 
-// ── Spotify connect sheet ─────────────────────────────────────────────────────
 function SpotifyConnectSheet({
   visible,
   onClose,
@@ -522,6 +519,8 @@ export default function WatchParty() {
   const [spotifyConnected, setSpotifyConnected] = useState(false);
   const [currentVote, setCurrentVote] = useState(null);
   const [voteResult, setVoteResult] = useState(null);
+
+  const [socketId, setSocketId] = useState(socket.id);
   const voteTimers = useRef({});
 
   useEffect(() => {
@@ -529,10 +528,20 @@ export default function WatchParty() {
     setSpotifyConnected(false);
     setSpotifySheetVisible(isHost);
 
-    socket.emit("join_room", roomId, {
-      firstname: user.firstname,
-      lastname: user.lastname,
-    });
+    const handleJoinRoom = () => {
+      if (socket.id) {
+        setSocketId(socket.id);
+      }
+      socket.emit("join_room", roomId, {
+        firstname: user.firstname,
+        lastname: user.lastname,
+      });
+    };
+
+    handleJoinRoom();
+
+    socket.on("connect", handleJoinRoom);
+
     socket.on("member_count", setMemberCount);
     socket.on("queue_updated", setQueue);
     socket.on("room_closed", () => router.replace("/(tabs)/JoinRoom"));
@@ -573,6 +582,7 @@ export default function WatchParty() {
     });
 
     return () => {
+      socket.off("connect", handleJoinRoom);
       socket.off("member_count");
       socket.off("queue_updated");
       socket.off("room_closed");
@@ -862,7 +872,7 @@ export default function WatchParty() {
       <VotePopup
         vote={currentVote}
         onVote={handleCastVote}
-        mySocketId={socket.id}
+        mySocketId={socketId}
         c={c}
         styles={styles}
       />

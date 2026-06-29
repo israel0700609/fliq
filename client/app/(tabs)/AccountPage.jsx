@@ -101,7 +101,7 @@ export default function AccountPage() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -138,7 +138,11 @@ export default function AccountPage() {
     <SafeAreaView style={styles.container}>
       <LinearGradient
         pointerEvents="none"
-        colors={isDark ? ["#0b0a1f", "#17143a", "#241f56"] : ["#f4f2ff", "#ede8ff", "#e8e2ff"]}
+        colors={
+          isDark
+            ? ["#0b0a1f", "#17143a", "#241f56"]
+            : ["#f4f2ff", "#ede8ff", "#e8e2ff"]
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.backgroundGradient}
@@ -154,7 +158,7 @@ export default function AccountPage() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Brand */}
+          {}
           <View style={styles.brandRow}>
             <View style={styles.filmStrip}>
               {[...Array(4)].map((_, i) => (
@@ -169,7 +173,7 @@ export default function AccountPage() {
             </View>
           </View>
 
-          {/* Page header */}
+          {}
           <View style={styles.pageHeader}>
             <View style={{ flex: 1, marginRight: 12 }}>
               <Text style={styles.pageTitle}>{i18n.t("myAccount")}</Text>
@@ -199,7 +203,7 @@ export default function AccountPage() {
             </Pressable>
           </View>
 
-          {/* Form — centered and width-capped on landscape */}
+          {}
           <View style={[styles.form, isLandscape && styles.formLandscape]}>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>{i18n.t("email")}</Text>
