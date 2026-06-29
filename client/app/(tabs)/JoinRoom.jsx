@@ -37,8 +37,6 @@ export default function JoinRoom() {
 
   const socket = useMemo(() => getSocket(SERVER_URL), []);
 
-  // useFocusEffect ensures that whenever the user navigates BACK to this screen,
-  // the socket listeners (room_joined, room_created) are re-attached.
   useFocusEffect(
     useCallback(() => {
       if (socket) {
@@ -59,9 +57,20 @@ export default function JoinRoom() {
       Alert.alert(i18n.t("connectionError"), i18n.t("stillConnecting"));
       return;
     }
-    SocketJoinParty(roomCode, socket, user);
-  };
 
+    if (!user) {
+      Alert.alert("Join room", "User details are missing.");
+      return;
+    }
+
+    const code = roomCode.trim().toUpperCase();
+    if (code.length === 0) return;
+
+    router.push({
+      pathname: "/(tabs)/WatchParty",
+      params: { roomId: code, isHost: "false" },
+    });
+  };
   const Brand = (
     <View style={[styles.brandRow, isLandscape && styles.brandRowLandscape]}>
       <View style={styles.filmStrip}>
