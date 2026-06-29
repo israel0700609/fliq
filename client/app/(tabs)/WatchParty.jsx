@@ -26,7 +26,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useApp } from "../../hooks/AppContext";
-import { getColors } from "../../constants";
+import { getColors } from "../../constants/theme";
 import { getSocket } from "../../lib/socket.js";
 import { useAuth } from "../../hooks/useAuth.js";
 const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL;
@@ -47,7 +47,7 @@ function VotePopup({ vote, onVote, mySocketId, c, styles }) {
         friction: 12,
       }).start();
     else slideAnim.setValue(120);
-  }, [slideAnim, vote]);
+  }, [vote?.trackUri]);
 
   if (!vote) return null;
   const total = vote.total || 1;
@@ -167,7 +167,7 @@ function VoteResultToast({ result, onDismiss, c, styles }) {
         useNativeDriver: true,
       }),
     ]).start(() => onDismiss());
-  }, [onDismiss, opacity, result]);
+  }, [result?.trackUri]);
   if (!result) return null;
   return (
     <Animated.View
@@ -426,7 +426,7 @@ function SearchSheet({ visible, onClose, roomId, c, styles }) {
           ) : results.length === 0 && query.length > 0 ? (
             <View style={styles.centeredState}>
               <Text style={styles.emptyText}>
-                {i18n.t("noResultsFor")} &quot;{query}&quot;
+                {i18n.t("noResultsFor")} "{query}"
               </Text>
             </View>
           ) : results.length === 0 ? (
@@ -526,7 +526,6 @@ export default function WatchParty() {
 
   useEffect(() => {
     if (!roomId || !user) return;
-    const timers = voteTimers.current;
     setSpotifyConnected(false);
     setSpotifySheetVisible(isHost);
 
@@ -542,8 +541,9 @@ export default function WatchParty() {
     socket.on("vote_started", (data) => {
       setCurrentVote((prev) => prev ?? { ...data, secondsLeft: 30 });
       let seconds = 30;
-      if (timers[data.trackUri]) clearInterval(timers[data.trackUri]);
-      timers[data.trackUri] = setInterval(() => {
+      if (voteTimers.current[data.trackUri])
+        clearInterval(voteTimers.current[data.trackUri]);
+      voteTimers.current[data.trackUri] = setInterval(() => {
         seconds -= 1;
         setCurrentVote((prev) =>
           prev?.trackUri === data.trackUri
@@ -551,8 +551,8 @@ export default function WatchParty() {
             : prev,
         );
         if (seconds <= 0) {
-          clearInterval(timers[data.trackUri]);
-          delete timers[data.trackUri];
+          clearInterval(voteTimers.current[data.trackUri]);
+          delete voteTimers.current[data.trackUri];
         }
       }, 1000);
     });
@@ -564,8 +564,8 @@ export default function WatchParty() {
     });
 
     socket.on("vote_result", (data) => {
-      clearInterval(timers[data.trackUri]);
-      delete timers[data.trackUri];
+      clearInterval(voteTimers.current[data.trackUri]);
+      delete voteTimers.current[data.trackUri];
       setCurrentVote((prev) =>
         prev?.trackUri === data.trackUri ? null : prev,
       );
@@ -580,11 +580,11 @@ export default function WatchParty() {
       socket.off("vote_started");
       socket.off("vote_update");
       socket.off("vote_result");
-      Object.values(timers).forEach(clearInterval);
+      Object.values(voteTimers.current).forEach(clearInterval);
       setSpotifySheetVisible(false);
       setSpotifyConnected(false);
     };
-  }, [roomId, router, isHost, user]);
+  }, [roomId, isHost, user]);
 
   const handleCastVote = (trackUri, vote) =>
     socket.emit("cast_vote", { trackUri, roomId, vote });

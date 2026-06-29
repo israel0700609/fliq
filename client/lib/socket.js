@@ -1,5 +1,5 @@
 import { Alert } from "react-native";
-import socketIOClient from "socket.io-client";
+import io from "socket.io-client";
 
 let socketInstance = null;
 
@@ -8,7 +8,7 @@ export function getSocket(SERVER_URL) {
     console.error("Missing EXPO_PUBLIC_SERVER_URL");
     return null;
   }
-  if (!socketInstance || socketUrl !== SERVER_URL) {
+  if (!socketInstance) {
     socketInstance = io(SERVER_URL, {
       transports: ["websocket"],
       autoConnect: true,
@@ -30,6 +30,7 @@ export function handleSocket(socket, router) {
       params: { roomId, isHost: "true" },
     });
   });
+
   socket.on("room_joined", (roomId) => {
     router.push({
       pathname: "/(tabs)/WatchParty",

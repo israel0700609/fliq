@@ -2,21 +2,16 @@ import i18n from "../../languages/i18n";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { View, StyleSheet } from "react-native";
-import { getColors } from "../../constants";
+import Colors from "../../constants/Colors";
 import { useApp } from "../../hooks/AppContext";
 
-function TabIcon({ name, color, focused, colors }) {
+function TabIcon({ name, color, focused }) {
   return (
-    <View
-      style={[
-        styles.iconWrapper,
-        focused && { backgroundColor: colors.border },
-      ]}
-    >
+    <View style={[styles.iconWrapper, focused && styles.iconWrapperActive]}>
       <Ionicons
         name={name}
         size={22}
-        color={focused ? colors.primary : color}
+        color={focused ? Colors.primary : color}
       />
     </View>
   );
@@ -24,22 +19,21 @@ function TabIcon({ name, color, focused, colors }) {
 
 export default function TabLayout() {
   const { isDark } = useApp();
-  const colors = getColors(isDark);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: Colors.surface,
           borderTopWidth: 1,
-          borderTopColor: colors.border,
+          borderTopColor: Colors.border,
           height: 64,
           paddingBottom: 10,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "600",
@@ -58,7 +52,6 @@ export default function TabLayout() {
               name={focused ? "home" : "home-outline"}
               color={color}
               focused={focused}
-              colors={colors}
             />
           ),
         }}
@@ -72,7 +65,6 @@ export default function TabLayout() {
               name={focused ? "musical-notes" : "musical-notes-outline"}
               color={color}
               focused={focused}
-              colors={colors}
             />
           ),
         }}
@@ -86,7 +78,6 @@ export default function TabLayout() {
               name={focused ? "person" : "person-outline"}
               color={color}
               focused={focused}
-              colors={colors}
             />
           ),
         }}
@@ -100,7 +91,6 @@ export default function TabLayout() {
               name={focused ? "people" : "people-outline"}
               color={color}
               focused={focused}
-              colors={colors}
             />
           ),
         }}
@@ -116,5 +106,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 6,
+  },
+  iconWrapperActive: {
+    backgroundColor: Colors.border,
   },
 });
