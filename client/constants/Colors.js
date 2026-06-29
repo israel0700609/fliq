@@ -1,4 +1,3 @@
-// Dark palette — indigo/violet glow (matches app mockups)
 const Dark = {
   background: "#0b0a1f",
   surface: "#2c1e52",
@@ -11,7 +10,6 @@ const Dark = {
   error: "#ff6b8a",
 };
 
-// Light palette — soft lavender tint, same visual family
 const Light = {
   background: "#f4f2ff",
   surface: "#e9e2ff",
@@ -26,5 +24,4 @@ const Light = {
 
 export { Dark, Light };
 
-// Default export is dark (used by screens that haven't migrated to getColors yet)
 export default Dark;

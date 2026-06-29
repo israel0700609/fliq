@@ -1,5 +1,5 @@
 import i18n from "../../languages/i18n";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { useApp } from "../../hooks/AppContext";
 import { getColors } from "../../constants";
 import {
@@ -34,14 +34,19 @@ export default function JoinRoom() {
   const styles = useMemo(() => createStyles(c), [c]);
   const { user } = useAuth();
   const [roomCode, setRoomCode] = useState("");
-  const [socket, setSocket] = useState(null);
 
-  useEffect(() => {
-    const newSocket = getSocket(SERVER_URL);
-    setSocket(newSocket);
-    const cleanup = handleSocket(newSocket, router);
-    return () => cleanup();
-  }, [router]);
+  const socket = useMemo(() => getSocket(SERVER_URL), []);
+
+  // useFocusEffect ensures that whenever the user navigates BACK to this screen,
+  // the socket listeners (room_joined, room_created) are re-attached.
+  useFocusEffect(
+    useCallback(() => {
+      if (socket) {
+        const cleanup = handleSocket(socket, router);
+        return () => cleanup();
+      }
+    }, [socket, router]),
+  );
 
   const handleCreateParty = () => {
     if (socket) SocketCreateParty(socket, user);
@@ -50,6 +55,7 @@ export default function JoinRoom() {
   const handleJoinParty = () => {
     if (!socket) return;
     if (!socket.connected) {
+      socket.connect();
       Alert.alert(i18n.t("connectionError"), i18n.t("stillConnecting"));
       return;
     }
@@ -77,11 +83,9 @@ export default function JoinRoom() {
       style={[styles.contentCol, isLandscape && styles.contentColLandscape]}
     >
       {!isLandscape && Brand}
-
       <Text style={styles.pageTitle}>{i18n.t("watchTogether")}</Text>
       <Text style={styles.pageSubtitle}>{i18n.t("hostOrJoin")}</Text>
 
-      {/* Create */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>{i18n.t("hostAParty")}</Text>
         <View style={styles.card}>
@@ -111,7 +115,6 @@ export default function JoinRoom() {
         <View style={styles.dividerLine} />
       </View>
 
-      {/* Join */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>{i18n.t("joinAParty")}</Text>
         <TextInput
@@ -149,7 +152,11 @@ export default function JoinRoom() {
     <SafeAreaView style={styles.container}>
       <LinearGradient
         pointerEvents="none"
-        colors={isDark ? ["#0b0a1f", "#17143a", "#241f56"] : ["#f4f2ff", "#ede8ff", "#e8e2ff"]}
+        colors={
+          isDark
+            ? ["#0b0a1f", "#17143a", "#241f56"]
+            : ["#f4f2ff", "#ede8ff", "#e8e2ff"]
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.backgroundGradient}
@@ -179,9 +186,7 @@ export default function JoinRoom() {
 const createStyles = (c) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: c.background },
-    backgroundGradient: {
-      ...StyleSheet.absoluteFillObject,
-    },
+    backgroundGradient: { ...StyleSheet.absoluteFillObject },
     glowCircleTop: {
       position: "absolute",
       top: -140,
@@ -212,9 +217,7 @@ const createStyles = (c) =>
       flexDirection: "row",
       alignItems: "flex-start",
       paddingVertical: 24,
-      gap: 0,
     },
-
     brandColLandscape: { width: 180, alignItems: "center", paddingTop: 24 },
     brandRow: {
       flexDirection: "row",
@@ -236,10 +239,8 @@ const createStyles = (c) =>
       color: c.primary,
       letterSpacing: 8,
     },
-
     contentCol: { flex: 1 },
     contentColLandscape: { flex: 1, paddingLeft: 32, paddingRight: 32 },
-
     pageTitle: {
       fontSize: 26,
       fontWeight: "700",
@@ -253,7 +254,6 @@ const createStyles = (c) =>
       letterSpacing: 0.3,
       marginBottom: 36,
     },
-
     section: { marginBottom: 8 },
     sectionLabel: {
       fontSize: 11,
@@ -263,7 +263,6 @@ const createStyles = (c) =>
       textTransform: "uppercase",
       marginBottom: 10,
     },
-
     card: {
       backgroundColor: c.surface,
       borderWidth: 1,
@@ -305,7 +304,6 @@ const createStyles = (c) =>
       fontWeight: "700",
       letterSpacing: 0.3,
     },
-
     dividerRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -314,7 +312,6 @@ const createStyles = (c) =>
     },
     dividerLine: { flex: 1, height: 1, backgroundColor: c.border },
     dividerText: { fontSize: 12, color: c.textMuted, letterSpacing: 1 },
-
     input: {
       backgroundColor: c.surface,
       borderWidth: 1,

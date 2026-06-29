@@ -54,7 +54,7 @@ const finalizeVote = async (io, roomId, trackUri, passed) => {
   if (!votes || !votes[trackUri]) return;
 
   const vote = votes[trackUri];
-  if (vote.locked) return; // another async call already handling this
+  if (vote.locked) return;
   vote.locked = true;
 
   clearTimeout(vote.timer);
@@ -215,7 +215,7 @@ export default function handleSocket(socket, io) {
     }
   });
 
-  socket.on("propose_song", ({ track, roomId }) => {
+  socket.on("propose_song", ({ track, roomId, userName }) => {
     if (!roomId || !track?.uri || !rooms.has(roomId)) {
       socket.emit("error_msg", "Missing room or track details.");
       return;
@@ -230,8 +230,7 @@ export default function handleSocket(socket, io) {
 
     const room = rooms.get(roomId);
     const proposer = room.members.get(socket.id);
-    const proposedBy = proposer?.username || "Someone";
-
+    const proposedBy = userName || proposer?.username || "Guest";
     if (getMemberCount(roomId) === 1) {
       addToQueue(track.uri, roomId).then((result) => {
         if (result.success) {
@@ -308,7 +307,6 @@ export default function handleSocket(socket, io) {
         return;
       }
 
-      // 2. מוסיפים את השירים
       if (tracks && tracks.length > 0) {
         await addTracksToPlayList(roomId, tracks);
       }
