@@ -17,7 +17,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useApp } from "../../hooks/AppContext";
-import { getColors } from "../../constants/theme";
+import { getColors } from "../../constants";
 import { calculateAge, validate, checkValidation } from "../../lib/utils";
 import { useAuth } from "../../hooks/useAuth.js";
 

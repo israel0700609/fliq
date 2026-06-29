@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../../hooks/AppContext';
-import { getColors } from '../../constants/theme';
+import { getColors } from '../../constants';
 import { useMemo } from 'react';
 
 const createStyles = (colors) =>

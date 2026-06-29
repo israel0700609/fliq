@@ -16,7 +16,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useApp } from "../../hooks/AppContext";
-import { getColors } from "../../constants/theme";
+import { getColors } from "../../constants";
 import { validate, checkValidationLogin } from "../../lib/utils";
 import { useAuth } from "../../hooks/useAuth.js";
 

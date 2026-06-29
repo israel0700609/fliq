@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUserById, updateUser } from "../supabase_api/authdb.js";
+import { getUserById, updateUser, deleteUser } from "../supabase_api/authdb.js";
 import { auth } from "../middleware/auth.js";
 
 const router = Router();
@@ -47,6 +47,15 @@ router.put("/user/update", async (req, res) => {
       message: "User updated successfully",
       user: updatedUser,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/user", async (req, res) => {
+  try {
+    await deleteUser(req.user.id);
+    res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
