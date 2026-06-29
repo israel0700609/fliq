@@ -150,6 +150,30 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      if (!token) return { success: false, message: "Not authenticated" };
+      if (!SERVER_URL) {
+        return {
+          success: false,
+          message: "Missing EXPO_PUBLIC_SERVER_URL in client/.env",
+        };
+      }
+
+      await axios.delete(`${SERVER_URL}/api/user`);
+      await storeLogout();
+      return { success: true };
+    } catch (error) {
+      const isNetworkError = !error.response;
+      return {
+        success: false,
+        message: isNetworkError
+          ? "Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status."
+          : error.response?.data?.message || "Delete account failed",
+      };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -159,6 +183,7 @@ const AuthProvider = ({ children }) => {
         register,
         logout,
         updateUser,
+        deleteAccount,
         isAuthenticated: !!token,
         loading,
       }}

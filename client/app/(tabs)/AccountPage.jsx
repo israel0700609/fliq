@@ -12,12 +12,13 @@ import {
   SafeAreaView,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useApp } from "../../hooks/AppContext";
-import { getColors } from "../../constants/theme";
+import { getColors } from "../../constants";
 import { validate, checkValidationUpdate } from "../../lib/utils";
 import { useAuth } from "../../hooks/useAuth.js";
 
@@ -25,7 +26,7 @@ export default function AccountPage() {
   const { isDark, isLandscape } = useApp();
   const c = getColors(isDark);
   const styles = useMemo(() => createStyles(c), [c]);
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, deleteAccount } = useAuth();
   const router = useRouter();
 
   const [values, setValues] = useState({
@@ -36,6 +37,7 @@ export default function AccountPage() {
   const [errors, setErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (user)
@@ -75,6 +77,34 @@ export default function AccountPage() {
   const handleLogout = async () => {
     await logout();
     router.replace("/(auth)/login");
+  };
+
+  const handleDeleteAccount = () => {
+    if (isDeleting) return;
+
+    Alert.alert(
+      i18n.t("deleteAccount"),
+      i18n.t("deleteAccountConfirm"),
+      [
+        { text: i18n.t("cancel"), style: "cancel" },
+        {
+          text: i18n.t("delete"),
+          style: "destructive",
+          onPress: async () => {
+            setIsDeleting(true);
+            const { success, message } = await deleteAccount();
+            setIsDeleting(false);
+
+            if (!success) {
+              setErrors((p) => ({ ...p, _server: message }));
+              return;
+            }
+
+            router.replace("/(auth)/login");
+          },
+        },
+      ],
+    );
   };
 
   function renderField(label, name, keyboardType = "default") {
@@ -224,6 +254,29 @@ export default function AccountPage() {
                 style={{ marginRight: 6 }}
               />
               <Text style={styles.logoutText}>{i18n.t("logout")}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.deleteButton,
+                isDeleting && styles.deleteButtonDisabled,
+              ]}
+              onPress={handleDeleteAccount}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <ActivityIndicator color={c.error} size="small" />
+              ) : (
+                <>
+                  <Ionicons
+                    name="trash-outline"
+                    size={16}
+                    color={c.error}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.deleteText}>{i18n.t("deleteAccount")}</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -391,7 +444,24 @@ const createStyles = (c) =>
       borderWidth: 1,
       borderColor: c.border,
     },
+    deleteButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 13,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: c.error,
+      marginTop: 12,
+    },
+    deleteButtonDisabled: { opacity: 0.6 },
     logoutText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: c.error,
+      letterSpacing: 0.3,
+    },
+    deleteText: {
       fontSize: 14,
       fontWeight: "600",
       color: c.error,

@@ -23,7 +23,7 @@ const connectDB = async () => {
         console.log(`Supabase is ready to use! URL: ${supabaseUrl}`);
     } catch (error) {
         console.error(`Error connecting to Supabase: ${error.message}`);
-        process.exit(1);
+        console.warn(`Supabase connection failed. Server will start but database operations may fail.`);
     }
 }
 
