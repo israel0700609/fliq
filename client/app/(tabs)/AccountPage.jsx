@@ -12,6 +12,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +26,7 @@ export default function AccountPage() {
   const { isDark, isLandscape } = useApp();
   const c = getColors(isDark);
   const styles = useMemo(() => createStyles(c), [c]);
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, deleteUser } = useAuth();
   const router = useRouter();
 
   const [values, setValues] = useState({
@@ -75,6 +76,33 @@ export default function AccountPage() {
   const handleLogout = async () => {
     await logout();
     router.replace("/(auth)/login");
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      i18n.t("deleteAccountConfirmTitle"),
+      i18n.t("deleteAccountConfirmMessage"),
+      [
+        {
+          text: i18n.t("cancel"),
+          style: "cancel",
+        },
+        {
+          text: i18n.t("delete"),
+          style: "destructive",
+          onPress: async () => {
+            setIsPending(true);
+            const { success, message } = await deleteUser();
+            setIsPending(false);
+            if (success) {
+              router.replace("/(auth)/login");
+            } else {
+              Alert.alert(i18n.t("somethingWentWrong"), message);
+            }
+          },
+        },
+      ]
+    );
   };
 
   function renderField(label, name, keyboardType = "default") {
@@ -224,6 +252,19 @@ export default function AccountPage() {
                 style={{ marginRight: 6 }}
               />
               <Text style={styles.logoutText}>{i18n.t("logout")}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDeleteAccount}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={16}
+                color={c.error}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={styles.deleteText}>{i18n.t("deleteAccount")}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -396,5 +437,22 @@ const createStyles = (c) =>
       fontWeight: "600",
       color: c.error,
       letterSpacing: 0.3,
+    },
+    deleteButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 13,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "transparent",
+      marginTop: 12,
+    },
+    deleteText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: c.error,
+      letterSpacing: 0.3,
+      textDecorationLine: "underline",
     },
   });

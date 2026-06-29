@@ -98,5 +98,9 @@
   "creatorsBioGavriel": "בונה חוויות דיגיטליות חדשניות שמחברות אנשים דרך מוזיקה ובידור.",
   "creatorsRoleIsrael": "יוצר-שותף ומוביל מוצר",
   "creatorsBioIsrael": "מתמקד ביצירת חוויית משתמש חלקה ובבניית קהילה פעילה באמצעות פיצ’רים שיתופיים.",
-  "creatorsFooter": "נבנה באהבה על ידי צוות FLIQ"
+  "creatorsFooter": "נבנה באהבה על ידי צוות FLIQ",
+  "deleteAccount": "מחק חשבון",
+  "deleteAccountConfirmTitle": "מחיקת חשבון",
+  "deleteAccountConfirmMessage": "האם אתה בטוח שברצונך למחוק את החשבון שלך? פעולה זו היא לצמיתות ולא ניתן לבטל אותה.",
+  "delete": "מחק"
 }

@@ -150,6 +150,27 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const deleteUser = async () => {
+    try {
+      if (!token) return { success: false, message: "Not authenticated" };
+
+      await axios.delete(`${SERVER_URL}/api/user`);
+
+      await storeLogout();
+
+      return { success: true };
+    } catch (error) {
+      console.error("deleteUser error:", error.message);
+      const isNetworkError = !error.response;
+      return {
+        success: false,
+        message: isNetworkError
+          ? "Cannot reach server. Check EXPO_PUBLIC_SERVER_URL and backend status."
+          : error.response?.data?.message || "Delete user failed",
+      };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -159,6 +180,7 @@ const AuthProvider = ({ children }) => {
         register,
         logout,
         updateUser,
+        deleteUser,
         isAuthenticated: !!token,
         loading,
       }}

@@ -98,5 +98,9 @@
   "creatorsBioGavriel": "Building innovative digital experiences that connect people through music and entertainment.",
   "creatorsRoleIsrael": "Co-founder & Product Lead",
   "creatorsBioIsrael": "Focusing on creating a seamless user experience and building an active community through collaborative features.",
-  "creatorsFooter": "Built with love by the FLIQ team"
+  "creatorsFooter": "Built with love by the FLIQ team",
+  "deleteAccount": "Delete Account",
+  "deleteAccountConfirmTitle": "Delete Account",
+  "deleteAccountConfirmMessage": "Are you sure you want to delete your account? This action is permanent and cannot be undone.",
+  "delete": "Delete"
 }
