@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../../hooks/AppContext';
 import { getColors } from '../../constants/theme';
 import { useMemo } from 'react';
+import i18n from '../../languages/i18n';
 
 const createStyles = (colors) =>
   StyleSheet.create({
@@ -115,14 +116,14 @@ export default function CreatorsScreen() {
   const creators = [
     {
       name: 'GAVRIEL FERNANDEZ',
-      role: 'יוצר-שותף ומפתח מוביל',
-      bio: 'בונה חוויות דיגיטליות חדשניות שמחברות אנשים דרך מוזיקה ובידור.',
+      role: i18n.t('creatorsRoleGavriel'),
+      bio: i18n.t('creatorsBioGavriel'),
       image: require('../../assets/images/gavriel.jpeg'),
     },
     {
       name: 'ISRAEL BAAL SHEM TOV CORD',
-      role: 'יוצר-שותף ומוביל מוצר',
-      bio: 'מתמקד ביצירת חוויית משתמש חלקה ובבניית קהילה פעילה באמצעות פיצ’רים שיתופיים.',
+      role: i18n.t('creatorsRoleIsrael'),
+      bio: i18n.t('creatorsBioIsrael'),
       image: require('../../assets/images/israel.jpeg'),
     },
   ];
@@ -141,10 +142,10 @@ export default function CreatorsScreen() {
       <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: '#c9f7dc' }]}>
-          היוצרים
+          {i18n.t('creators')}
         </Text>
         <Text style={[styles.subtitle, { color: '#9ee5bb' }]}>
-          האנשים שמאחורי FLIQ
+          {i18n.t('creatorsSubtitle')}
         </Text>
       </View>
 
@@ -179,7 +180,7 @@ export default function CreatorsScreen() {
 
       <View style={[styles.footer, { borderTopColor: isDark ? '#2ecb71' : '#7edda9' }]}>
         <Text style={[styles.footerText, { color: isDark ? '#9ee5bb' : '#1f7a46' }]}>
-          נבנה באהבה על ידי צוות FLIQ
+          {i18n.t('creatorsFooter')}
         </Text>
       </View>
       </ScrollView>

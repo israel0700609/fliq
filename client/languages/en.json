@@ -92,5 +92,11 @@
   "mapTabHome": "Home",
   "mapTabParty": "Party",
   "mapTabAccount": "Account",
-  "creators": "creators"
+  "creators": "Creators",
+  "creatorsSubtitle": "The people behind FLIQ",
+  "creatorsRoleGavriel": "Co-founder & Lead Developer",
+  "creatorsBioGavriel": "Building innovative digital experiences that connect people through music and entertainment.",
+  "creatorsRoleIsrael": "Co-founder & Product Lead",
+  "creatorsBioIsrael": "Focusing on creating a seamless user experience and building an active community through collaborative features.",
+  "creatorsFooter": "Built with love by the FLIQ team"
 }

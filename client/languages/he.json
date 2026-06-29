@@ -92,5 +92,11 @@
   "mapTabHome": "בית",
   "mapTabParty": "מסיבה",
   "mapTabAccount": "חשבון",
-  "creators": "היוצרים"
+  "creators": "היוצרים",
+  "creatorsSubtitle": "האנשים שמאחורי FLIQ",
+  "creatorsRoleGavriel": "יוצר-שותף ומפתח מוביל",
+  "creatorsBioGavriel": "בונה חוויות דיגיטליות חדשניות שמחברות אנשים דרך מוזיקה ובידור.",
+  "creatorsRoleIsrael": "יוצר-שותף ומוביל מוצר",
+  "creatorsBioIsrael": "מתמקד ביצירת חוויית משתמש חלקה ובבניית קהילה פעילה באמצעות פיצ’רים שיתופיים.",
+  "creatorsFooter": "נבנה באהבה על ידי צוות FLIQ"
 }
